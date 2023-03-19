@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">VISUAL_AID_APP</string>
+    <string name="welcome_message">Welcome to Visual Aid App developed by Bill Cheimonis</string>
 </resources>
