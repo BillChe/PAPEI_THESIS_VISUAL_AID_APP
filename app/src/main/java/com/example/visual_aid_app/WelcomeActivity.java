@@ -2,14 +2,19 @@ package com.example.visual_aid_app;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.view.View;
+import android.widget.Button;
 
 import java.util.Locale;
 
 public class WelcomeActivity extends AppCompatActivity {
     TextToSpeech tts;
+    private Button captureBtn;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,6 +29,19 @@ public class WelcomeActivity extends AppCompatActivity {
         getBaseContext().getResources().updateConfiguration(config,
                 getBaseContext().getResources().getDisplayMetrics());
         playWelcomeMessage();
+
+        initView();
+    }
+
+    private void initView() {
+        captureBtn = findViewById(R.id.captureBtn);
+        captureBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent captureIntent = new Intent(WelcomeActivity.this, ScannerActivity.class);
+                startActivity(captureIntent);
+            }
+        });
     }
 
     private void playWelcomeMessage() {
