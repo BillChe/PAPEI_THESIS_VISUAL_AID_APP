@@ -1,4 +1,19 @@
 <resources>
     <string name="app_name">VISUAL_AID_APP</string>
-    <string name="welcome_message">Welcome to Visual Aid App developed by Bill Cheimonis</string>
+    <string name="welcome_message">Welcome to Visual Aid App. developed by Bill Cheimonis</string>
+    <string name="text_recognition">Text Recognition</string>
+    <string name="text_recognition_option">For Text Recognition Option</string>
+    <string name="quick_text_recognition">For Quick Text Recognition</string>
+    <string name="document_detection_option">For document detection Option</string>
+    <string name="image_description_option">For image description Option</string>
+    <string name="face_detection_option">For face detection Option</string>
+    <string name="zoom_option">For zoom Option</string>
+    <string name="color_detection_option">For color detection Option</string>
+    <string name="flashlight_option">For flashlight Option</string>
+    <string name="takenote_option">For take a note Option</string>
+    <string name="pdfreader_option">For PDF Reader Option</string>
+    <string name="help_option">For Help Option</string>
+    <string name="settings_option">For Settings Menu Option</string>
+
+
 </resources>
