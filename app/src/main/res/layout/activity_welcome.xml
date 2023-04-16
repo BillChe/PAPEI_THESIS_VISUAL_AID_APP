@@ -10,7 +10,7 @@
         android:id="@+id/scannerImageView"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:src="@drawable/scanner"
+        android:src="@drawable/thesisbackground"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/textview"
@@ -36,7 +36,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textview"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/papei"
         android:id="@+id/buttonsLayout">
 
 
@@ -190,5 +190,15 @@
     </ScrollView>
 
 
+    <ImageView
+        android:id="@+id/papei"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:src="@drawable/papei_horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonsLayout"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+    </ImageView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

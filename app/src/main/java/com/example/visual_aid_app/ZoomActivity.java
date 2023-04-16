@@ -16,11 +16,11 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ZoomControls;
 
 import com.google.android.gms.vision.CameraSource;
-import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
@@ -28,66 +28,41 @@ import java.io.IOException;
 public class ZoomActivity extends AppCompatActivity {
     private SurfaceView mCameraView;
     private TextView mTextView;
-    private CameraSource mCameraSource;
-    private TextRecognizer textRecognizer;
     ZoomControls zoomControls;
 
     private final int cameraPermissionID = 101;
     int currentZoomLevel = 0, maxZoomLevel = 0;
     Camera camera;
     Camera.Parameters parameters;
-    boolean isPreviewing, isZoomSupported, isSmoothZoomSupported;
+    boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn;
+    private Button flashtBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_zoom);
 
-        mCameraView = findViewById(R.id.surfaceView);
-        mTextView = findViewById(R.id.text_view);
-        zoomControls = (ZoomControls) findViewById(R.id.CAMERA_ZOOM_CONTROLS);
-
- /*       zoomControls.setOnZoomInClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                maxZoomLevel = parameters.getMaxZoom();
-                if(currentZoomLevel < maxZoomLevel){
-                    currentZoomLevel++;
-                    parameters.setZoom(currentZoomLevel);
-                    camera.setParameters(parameters);
-                }
-            }
-        });
-        zoomControls.setOnZoomOutClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                maxZoomLevel = parameters.getMaxZoom();
-                if(currentZoomLevel > 0){
-                    currentZoomLevel--;
-                    camera.startSmoothZoom(currentZoomLevel);
-                }
-            }
-        });*/
+        setViews();
+        setListeners();
 
         startCamera();
+    }
+
+    private void setViews() {
+        mCameraView = findViewById(R.id.surfaceView);
+        mTextView = findViewById(R.id.text_view);
+        flashtBtn = findViewById(R.id.flashtBtn);
+        zoomControls = (ZoomControls) findViewById(R.id.CAMERA_ZOOM_CONTROLS);
+    }
+
+    private void setListeners() {
+
     }
     /**
      * Init camera source with needed properties,
      * then set camera view to surface view.
      */
     private void startCamera() {
-
-       // textRecognizer = new TextRecognizer.Builder(getApplicationContext()).build();
-
-       // if (textRecognizer.isOperational()) {
-
-        /*    mCameraSource = new CameraSource.Builder(getApplicationContext(), textRecognizer)
-                    .setFacing(CameraSource.CAMERA_FACING_BACK)
-                    .setRequestedPreviewSize(1280, 1024)
-                    .setAutoFocusEnabled(true)
-                    .setRequestedFps(2.0f)
-                    .build();*/
-
             //If permission is granted cameraSource started and passed it to surfaceView
             mCameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
                 @Override
@@ -98,11 +73,7 @@ public class ZoomActivity extends AppCompatActivity {
                         parameters = camera.getParameters();
                         setCameraDisplayOrientation(ZoomActivity.this,0,camera);
                         parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
-                    /*    try {
-                            mCameraSource.start(mCameraView.getHolder());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }*/
+
 
                     } else {
 
@@ -178,7 +149,24 @@ public class ZoomActivity extends AppCompatActivity {
                         //no zoom on phone
                         zoomControls.setVisibility(View.GONE);
                     }
+                    flashtBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            if(!flashOn)
+                            {
+                                parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                                flashOn = true;
+                                camera.setParameters(parameters);
+                            }
+                            else
+                            {
+                                parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                                flashOn = false;
+                                camera.setParameters(parameters);
+                            }
 
+                        }
+                    });
                     camera.setParameters(parameters);
 
                     try {
@@ -194,13 +182,11 @@ public class ZoomActivity extends AppCompatActivity {
 
                 @Override
                 public void surfaceDestroyed(SurfaceHolder holder) {
-                    //mCameraSource.stop();
                     if(camera!=null){
                         camera.stopPreview();
                     }
                 }
             });
-       // }
 
     }
 
