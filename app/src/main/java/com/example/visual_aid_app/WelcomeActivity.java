@@ -17,7 +17,7 @@ import java.util.Locale;
 
 public class WelcomeActivity extends AppCompatActivity {
     TextToSpeech tts;
-    private Button captureBtn,textDetectBtn,textDetectBtnJav,flashtBtn,flashOffBtn;
+    private Button captureBtn,textDetectBtn,textDetectBtnJav,flashtBtn,flashOffBtn,zoomBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +62,16 @@ public class WelcomeActivity extends AppCompatActivity {
                 startActivity(captureIntent);
             }
         });
+
+        zoomBtn = findViewById(R.id.zoomBtn);
+        zoomBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent captureIntent = new Intent(WelcomeActivity.this, ZoomActivity.class);
+                startActivity(captureIntent);
+            }
+        });
+
         flashtBtn = findViewById(R.id.flashtBtn);
         flashtBtn.setOnClickListener(new View.OnClickListener() {
             @Override
