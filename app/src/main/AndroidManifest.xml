@@ -7,8 +7,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-feature android:name="android.hardware.camera" />
-    <!-- Features -->
+
+    <uses-feature android:name="android.hardware.camera" /> <!-- Features -->
     <uses-feature android:name="android.hardware.camera.flash" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
@@ -27,7 +27,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VISUAL_AID_APP"
         tools:targetApi="31">
-
+        <activity
+            android:name=".ColorDetectionActivity"
+            android:exported="false" />
         <activity
             android:name=".CameraView"
             android:exported="false"
@@ -51,6 +53,7 @@
             android:name=".ZoomActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
         <meta-data
             android:name="com.google.android.gms.vision.DEPENDENCIES"
             android:value="ocr" />

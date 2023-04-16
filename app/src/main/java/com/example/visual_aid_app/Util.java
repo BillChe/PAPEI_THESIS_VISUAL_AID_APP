@@ -33,4 +33,6 @@ public class Util {
         byte[] imageBytes = byteArrayOutputStream.toByteArray();
         return Base64.encodeToString(imageBytes, Base64.NO_WRAP);
     }
+
+    
 }

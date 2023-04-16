@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
@@ -17,7 +18,7 @@ import java.util.Locale;
 
 public class WelcomeActivity extends AppCompatActivity {
     TextToSpeech tts;
-    private Button captureBtn,textDetectBtn,textDetectBtnJav,flashtBtn,flashOffBtn,zoomBtn;
+    private Button captureBtn,textDetectBtn,textDetectBtnJav,flashtBtn,flashOffBtn,zoomBtn,colorRecognitionBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +69,14 @@ public class WelcomeActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent captureIntent = new Intent(WelcomeActivity.this, ZoomActivity.class);
+                startActivity(captureIntent);
+            }
+        });
+        colorRecognitionBtn = findViewById(R.id.colorRecognitionBtn);
+        colorRecognitionBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent captureIntent = new Intent(WelcomeActivity.this, ColorDetectionActivity.class);
                 startActivity(captureIntent);
             }
         });
