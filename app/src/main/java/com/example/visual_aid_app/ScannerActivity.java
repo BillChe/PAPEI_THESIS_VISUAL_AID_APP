@@ -9,9 +9,12 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -23,10 +26,19 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.face.Face;
+import com.google.mlkit.vision.face.FaceContour;
+import com.google.mlkit.vision.face.FaceDetection;
+import com.google.mlkit.vision.face.FaceDetector;
+import com.google.mlkit.vision.face.FaceDetectorOptions;
+import com.google.mlkit.vision.face.FaceLandmark;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+
+import java.io.IOException;
+import java.util.List;
 
 public class ScannerActivity extends AppCompatActivity {
 
@@ -68,9 +80,109 @@ public class ScannerActivity extends AppCompatActivity {
         detectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                detectText();
+                //detectText();
+                //todo vasilis move this logic on a separate functionality
+                detectFace();
             }
         });
+    }
+
+    private void detectFace() {
+        InputImage image = InputImage.fromBitmap(imageBitmap,0);
+        FaceDetectorOptions highAccuracyOpts =
+                new FaceDetectorOptions.Builder()
+                        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+                        .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
+                        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
+                        .build();
+        FaceDetector detector = FaceDetection.getClient(highAccuracyOpts);
+// Or use the default options:
+// FaceDetector detector = FaceDetection.getClient();
+        Task<List<Face>> result =
+                detector.process(image)
+                        .addOnSuccessListener(
+                                new OnSuccessListener<List<Face>>() {
+                                    @Override
+                                    public void onSuccess(List<Face> faces) {
+                                        // Task completed successfully
+                                        // ...
+
+                                        for (Face face : faces) {
+                                            Rect bounds = face.getBoundingBox();
+                                            float rotY = face.getHeadEulerAngleY();  // Head is rotated to the right rotY degrees
+                                            float rotZ = face.getHeadEulerAngleZ();  // Head is tilted sideways rotZ degrees
+
+                                            // If landmark detection was enabled (mouth, ears, eyes, cheeks, and
+                                            // nose available):
+                                            FaceLandmark leftEar = face.getLandmark(FaceLandmark.LEFT_EAR);
+                                            if (leftEar != null) {
+                                                PointF leftEarPos = leftEar.getPosition();
+                                            }
+
+                                            // If contour detection was enabled:
+                                     /*       List<PointF> leftEyeContour =
+                                                    face.getContour(FaceContour.LEFT_EYE).getPoints();
+                                            List<PointF> upperLipBottomContour =
+                                                    face.getContour(FaceContour.UPPER_LIP_BOTTOM).getPoints();*/
+                                            // If classification was enabled:
+                                            if (face.getSmilingProbability() != null) {
+                                                float smileProb = face.getSmilingProbability();
+
+                                                //todo vasilis add here optimization on this
+                                                if(smileProb > 0.50 && smileProb <= 0.80)
+                                                {
+                                                    Toast.makeText(ScannerActivity.this,
+                                                            "face detected probably smiling?"+ smileProb,Toast.LENGTH_SHORT).show();
+                                                } else if (smileProb > 0.80) {
+
+                                                    Toast.makeText(ScannerActivity.this,
+                                                            "face detected and SMILIIIING!"+ smileProb,Toast.LENGTH_SHORT).show();
+                                                    AssetFileDescriptor afd = null;
+                                                    try {
+                                                        afd = getAssets().openFd("supersonic.mp3");
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                    MediaPlayer player = new MediaPlayer();
+                                                    try {
+                                                        player.setDataSource(afd.getFileDescriptor(),afd.getStartOffset(),afd.getLength());
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                    try {
+                                                        player.prepare();
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                    player.start();
+                                                }
+                                                else if(smileProb < 0.50)
+                                                {
+                                                    Toast.makeText(ScannerActivity.this,
+                                                            "face detected and why so serious???"+ smileProb,Toast.LENGTH_SHORT).show();
+                                                }
+                                            }
+                                            if (face.getRightEyeOpenProbability() != null) {
+                                                float rightEyeOpenProb = face.getRightEyeOpenProbability();
+                                            }
+
+                                            // If face tracking was enabled:
+                                            if (face.getTrackingId() != null) {
+                                                int id = face.getTrackingId();
+                                            }
+                                        }
+
+
+                                    }
+                                })
+                        .addOnFailureListener(
+                                new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        // Task failed with an exception
+                                        // ...
+                                    }
+                                });
     }
 
     private boolean checkPermission(){
