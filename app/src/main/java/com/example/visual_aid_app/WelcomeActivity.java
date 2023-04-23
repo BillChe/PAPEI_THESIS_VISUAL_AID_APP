@@ -18,7 +18,8 @@ import java.util.Locale;
 
 public class WelcomeActivity extends AppCompatActivity {
     TextToSpeech tts;
-    private Button captureBtn,textDetectBtn,textDetectBtnJav,flashtBtn,flashOffBtn,zoomBtn,colorRecognitionBtn;
+    private Button captureBtn,textDetectBtn,textDetectBtnJav,flashtBtn,flashOffBtn,zoomBtn,
+            colorRecognitionBtn,faceDetectionBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

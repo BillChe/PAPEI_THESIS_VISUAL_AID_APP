@@ -5,6 +5,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ZoomActivity">
+    <ImageView
+        android:id="@+id/showImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+    </ImageView>
     <Button
         android:id="@+id/flashtBtn"
         android:text="Flashlight"
@@ -23,7 +34,10 @@
         android:layout_height="match_parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+
         />
+
+
     <ZoomControls
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -32,7 +46,19 @@
         android:id="@+id/CAMERA_ZOOM_CONTROLS"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toTopOf="@id/captureBtn"
+    >
     </ZoomControls>
+    <Button
+        android:id="@+id/captureBtn"
+        android:text="ZOOM"
+        android:textAllCaps="false"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+    </Button>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
