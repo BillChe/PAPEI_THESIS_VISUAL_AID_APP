@@ -43,7 +43,6 @@ import java.util.Calendar;
 
 public class ZoomActivity extends AppCompatActivity {
     private SurfaceView mCameraView;
-    private TextView mTextView;
     ZoomControls zoomControls;
 
     private final int cameraPermissionID = 101;
@@ -68,7 +67,6 @@ public class ZoomActivity extends AppCompatActivity {
 
     private void setViews() {
         mCameraView = findViewById(R.id.surfaceView);
-        mTextView = findViewById(R.id.text_view);
         flashtBtn = findViewById(R.id.flashtBtn);
         zoomControls = (ZoomControls) findViewById(R.id.CAMERA_ZOOM_CONTROLS);
         captureBtn = findViewById(R.id.captureBtn);

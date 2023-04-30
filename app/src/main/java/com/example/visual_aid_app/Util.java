@@ -1,11 +1,34 @@
 package com.example.visual_aid_app;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.util.Base64;
+
+import androidx.core.app.ActivityCompat;
 
 import java.io.ByteArrayOutputStream;
 
 public class Util {
+
+
+
+   public static boolean checkHasCameraPermission(Context context) {
+        return ActivityCompat.checkSelfPermission(context,
+                android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /** Check if this device has a camera */
+    public static boolean checkCameraHardware(Context context) {
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)){
+            // this device has a camera
+            return true;
+        } else {
+            // no camera on this device
+            return false;
+        }
+    }
+
 
     public Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
         int originalWidth = bitmap.getWidth();
