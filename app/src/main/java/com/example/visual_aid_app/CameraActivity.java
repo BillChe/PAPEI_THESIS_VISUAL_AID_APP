@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -75,7 +76,7 @@ public class CameraActivity extends AppCompatActivity {
     private CameraActivityViewModel mViewModel;
     ActivityCameraBinding binding;
     Context context;
-
+    List <Button> buttonFunctionsList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,11 +86,42 @@ public class CameraActivity extends AppCompatActivity {
         mViewModel = new CameraActivityViewModel(CameraActivity.this);
         context = CameraActivity.this;
 
+
+
         setViews();
         setListeners();
+        //fill Buttons List
+        buttonFunctionsList= new ArrayList<>();
+        fillButtonList(buttonFunctionsList);
+
         //camera init
         // Create an instance of Camera
         getCameraInstance();
+    }
+
+    private void fillButtonList(List<Button> buttonFunctionsList) {
+        buttonFunctionsList.add(textDetectBtn);
+        buttonFunctionsList.add(quickTextDetectBtn);
+        buttonFunctionsList.add(documentDetectBtn);
+        buttonFunctionsList.add(imageDescriptionBtn);
+        buttonFunctionsList.add(faceDetectionBtn);
+        buttonFunctionsList.add(colorRecognitionBtn);
+        buttonFunctionsList.add(LightFunctionBtn);
+        buttonFunctionsList.add(noteFunctionBtn);
+        buttonFunctionsList.add(settingsBtn);
+        buttonFunctionsList.add(helpBtn);
+
+    }
+
+    private void deactivateOtherButtons(String tag)
+    {
+        for(int i = 0; i < buttonFunctionsList.size();i++)
+        {
+            if(!buttonFunctionsList.get(i).getTag().equals(tag))
+            {
+                buttonFunctionsList.get(i).setSelected(false);
+            }
+        }
     }
 
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
@@ -203,8 +235,18 @@ public class CameraActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                /* camera.takePicture(null, null, mPicture);*/
-                textDetection = true;
-                textDetectBtn.setPressed(true);
+                if(!textDetection)
+                {
+                    textDetection = true;
+                    textDetectBtn.setSelected(true);
+                    deactivateOtherButtons(textDetectBtn.getTag().toString());
+                }
+                else
+                {
+                    textDetection = false;
+                    textDetectBtn.setSelected(false);
+                }
+
 
             }
         });

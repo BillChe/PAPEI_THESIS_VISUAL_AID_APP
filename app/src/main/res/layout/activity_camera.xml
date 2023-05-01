@@ -130,6 +130,7 @@ android:layout_height="match_parent"
         android:orientation="horizontal">
 
         <Button
+            android:tag="textDetectBtn"
             android:id="@+id/textDetectBtn"
             android:text="Text Detection"
             android:textAllCaps="false"
