@@ -1,6 +1,8 @@
 package com.example.visual_aid_app;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.os.Bundle;
@@ -9,6 +11,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.ImageView;
+
+import java.io.FileInputStream;
 
 public class ZoomInZoomOut extends Activity implements OnTouchListener
 {
@@ -38,6 +42,16 @@ public class ZoomInZoomOut extends Activity implements OnTouchListener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.zoomin_zoomout);
         ImageView view = (ImageView) findViewById(R.id.imageView);
+        Bitmap bmp = null;
+        String filename = getIntent().getStringExtra("image");
+        try {
+            FileInputStream is = this.openFileInput(filename);
+            bmp = BitmapFactory.decodeStream(is);
+            is.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        view.setImageBitmap(bmp);
         view.setOnTouchListener(this);
     }
 

@@ -5,7 +5,9 @@ import static android.content.ContentValues.TAG;
 import static com.example.visual_aid_app.Util.checkHasCameraPermission;
 import static com.example.visual_aid_app.ZoomActivity.decodeFile;
 import static com.example.visual_aid_app.ZoomActivity.decodeStrem;
+import static com.example.visual_aid_app.ZoomActivity.rotateImage;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.databinding.DataBindingUtil;
@@ -13,7 +15,11 @@ import androidx.databinding.DataBindingUtil;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,17 +31,27 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ZoomControls;
 
 
 import com.example.visual_aid_app.databinding.ActivityCameraBinding;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.Text;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.List;
 
 public class CameraActivity extends AppCompatActivity {
 
@@ -45,17 +61,17 @@ public class CameraActivity extends AppCompatActivity {
     Button captureButton ;
     protected String imageFilePath;
     private SurfaceView mCameraView;
-/*
-    private TextView mTextView;
-*/
+    private TextView textview;
     ZoomControls zoomControls;
 
     private final int cameraPermissionID = 101;
     int currentZoomLevel = 0, maxZoomLevel = 0;
-    boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn;
-    private Button zoomBtn;
-    private ImageView flashtBtn,flashOff;
-    ImageView showImageView;
+    boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn, textDetection;
+    private Button zoomBtn, textDetectBtn,
+            quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
+            colorRecognitionBtn,LightFunctionBtn,noteFunctionBtn,settingsBtn,helpBtn;
+    private ImageView flashtBtn, info;
+    ImageView showImageView,showImageViewPreview;
     private CameraActivityViewModel mViewModel;
     ActivityCameraBinding binding;
     Context context;
@@ -113,14 +129,23 @@ public class CameraActivity extends AppCompatActivity {
                         bitmap = decodeStrem(file, selectedImage,
                                 CameraActivity.this);
                     } else {
-                        bitmap = decodeFile(file, 10);
+                         bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+
                     }
                 }
                 if (bitmap != null) {
-                    showImageView.setImageBitmap(bitmap);
                     Toast.makeText(CameraActivity.this,
                                     "Picture Captured Successfully:", Toast.LENGTH_LONG)
                             .show();
+                    //Pop intent
+                    if(textDetection)
+                    {
+                        bitmap = rotateImage(bitmap, file.getAbsolutePath());
+                        detectText(bitmap);
+                    }
+                    showImageView.setImageBitmap(bitmap);
+                    showImageViewPreview.setImageBitmap(bitmap);
+
                 } else {
                     Toast.makeText(CameraActivity.this,
                             "Failed to Capture the picture. kindly Try Again:",
@@ -146,9 +171,13 @@ public class CameraActivity extends AppCompatActivity {
         captureButton = (Button) findViewById(R.id.button_capture);
         mCameraView = findViewById(R.id.surfaceView);
         flashtBtn = findViewById(R.id.flashtBtn);
+        info = findViewById(R.id.info);
         zoomControls = (ZoomControls) findViewById(R.id.CAMERA_ZOOM_CONTROLS);
         zoomBtn = findViewById(R.id.zoomBtn);
         showImageView = findViewById(R.id.showImageView);
+        showImageViewPreview =  findViewById(R.id.showImageViewPreview);
+        textDetectBtn = findViewById(R.id.textDetectBtn);
+        textview = findViewById(R.id.textview);
 
 
     }
@@ -163,8 +192,61 @@ public class CameraActivity extends AppCompatActivity {
                     }
                 }
         );
-    }
+        info.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(CameraActivity.this,"Show info for selected function",Toast.LENGTH_SHORT).show();
+            }
+        });
 
+        textDetectBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+               /* camera.takePicture(null, null, mPicture);*/
+                textDetection = true;
+                textDetectBtn.setPressed(true);
+
+            }
+        });
+    }
+    private void detectText(Bitmap imageBitmap) {
+        InputImage image = InputImage.fromBitmap(imageBitmap,0);
+        TextRecognizer textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+        Task<Text> result = textRecognizer.process(image).addOnSuccessListener(new OnSuccessListener<Text>() {
+            @Override
+            public void onSuccess(Text text) {
+                StringBuilder result = new StringBuilder();
+                for(Text.TextBlock textBlock : text.getTextBlocks())
+                {
+                    String blockText = textBlock.getText();
+                    Point[] blockCornerPoint = textBlock.getCornerPoints();
+                    Rect blockFrame = textBlock.getBoundingBox();
+                    for(Text.Line line : textBlock.getLines())
+                    {
+                        String lineText = line.getText();
+                        Point[] lineCornerPoint = line.getCornerPoints();
+                        Rect lineRect = line.getBoundingBox();
+                        for(Text.Element element : line.getElements())
+                        {
+                            String elementText = element.getText();
+                            result.append(elementText);
+                        }
+
+                    }
+                }
+                Toast.makeText(CameraActivity.this,result,
+                        Toast.LENGTH_LONG).show();
+                textview.setText(result);
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(CameraActivity.this,"Failed to detect text from image"+e.getMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
     /** A safe way to get an instance of the Camera object. */
     public void getCameraInstance(){
         //If permission is granted cameraSource started and passed it to surfaceView
@@ -178,6 +260,12 @@ public class CameraActivity extends AppCompatActivity {
                     setCameraDisplayOrientation(CameraActivity.this,0,camera);
                     parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
 
+                    List<Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
+
+
+                    Camera.Size sizePicture = (supportedSizes.get(0));
+
+                    parameters.setPictureSize(supportedSizes.get(0).width,supportedSizes.get(0).height);
 
                 } else {
 
@@ -310,7 +398,6 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mViewModel.setFlashOn(flashOn);
     }
 
     private void setCameraDisplayOrientation(Activity activity, int cameraId,

@@ -63,6 +63,10 @@
             android:name=".ZoomActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".ZoomInZoomOut"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <meta-data
             android:name="com.google.android.gms.vision.DEPENDENCIES"
