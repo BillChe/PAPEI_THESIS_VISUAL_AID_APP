@@ -10,6 +10,7 @@
 
     <uses-feature android:name="android.hardware.camera" /> <!-- Features -->
     <uses-feature android:name="android.hardware.camera.flash" />
+    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <uses-feature android:name="android.hardware.location.gps" />

@@ -3,7 +3,6 @@ package com.example.visual_aid_app;
 import static android.content.ContentValues.TAG;
 
 import static com.example.visual_aid_app.Util.checkHasCameraPermission;
-import static com.example.visual_aid_app.ZoomActivity.decodeFile;
 import static com.example.visual_aid_app.ZoomActivity.decodeStrem;
 import static com.example.visual_aid_app.ZoomActivity.rotateImage;
 
@@ -16,14 +15,18 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.hardware.Camera;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -37,10 +40,25 @@ import android.widget.ZoomControls;
 
 
 import com.example.visual_aid_app.databinding.ActivityCameraBinding;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.functions.FirebaseFunctions;
+import com.google.firebase.functions.HttpsCallableResult;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.face.Face;
+import com.google.mlkit.vision.face.FaceDetection;
+import com.google.mlkit.vision.face.FaceDetector;
+import com.google.mlkit.vision.face.FaceDetectorOptions;
+import com.google.mlkit.vision.face.FaceLandmark;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
@@ -53,6 +71,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class CameraActivity extends AppCompatActivity {
 
@@ -60,23 +79,32 @@ public class CameraActivity extends AppCompatActivity {
     Camera.Parameters parameters;
 /*    private CameraPreview mPreview;*/
     Button captureButton ;
-    protected String imageFilePath;
+    protected String imageFilePath,quickCaptureText;
     private SurfaceView mCameraView;
     private TextView textview;
     ZoomControls zoomControls;
 
+    public static final int CAMERA_FACING_BACK = 0;
+    /** @deprecated */
+
+    public static final int CAMERA_FACING_FRONT = 1;
     private final int cameraPermissionID = 101;
     int currentZoomLevel = 0, maxZoomLevel = 0;
-    boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn, textDetection;
+    boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn, textDetection, negativeCam;
     private Button zoomBtn, textDetectBtn,
             quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
-            colorRecognitionBtn,LightFunctionBtn,noteFunctionBtn,settingsBtn,helpBtn;
-    private ImageView flashtBtn, info;
+            colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,settingsBtn,helpBtn,button_switch_camera;
+    private ImageView flashBtn, info, blackwhite;
     ImageView showImageView,showImageViewPreview;
     private CameraActivityViewModel mViewModel;
     ActivityCameraBinding binding;
     Context context;
     List <Button> buttonFunctionsList;
+    private FirebaseFunctions mFunctions;
+    private TextToSpeech textToSpeech;
+    private int activeCamera = CAMERA_FACING_BACK;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,6 +114,15 @@ public class CameraActivity extends AppCompatActivity {
         mViewModel = new CameraActivityViewModel(CameraActivity.this);
         context = CameraActivity.this;
 
+        // Init TextToSpeech and set language
+        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status != TextToSpeech.ERROR) {
+                    textToSpeech.setLanguage(Locale.US);
+                }
+            }
+        });
 
 
         setViews();
@@ -106,7 +143,7 @@ public class CameraActivity extends AppCompatActivity {
         buttonFunctionsList.add(imageDescriptionBtn);
         buttonFunctionsList.add(faceDetectionBtn);
         buttonFunctionsList.add(colorRecognitionBtn);
-        buttonFunctionsList.add(LightFunctionBtn);
+        buttonFunctionsList.add(lightFunctionBtn);
         buttonFunctionsList.add(noteFunctionBtn);
         buttonFunctionsList.add(settingsBtn);
         buttonFunctionsList.add(helpBtn);
@@ -170,15 +207,46 @@ public class CameraActivity extends AppCompatActivity {
                                     "Picture Captured Successfully:", Toast.LENGTH_LONG)
                             .show();
                     //Pop intent
-                    if(textDetection)
+                    if(textDetectBtn.isSelected())
                     {
                         bitmap = rotateImage(bitmap, file.getAbsolutePath());
                         detectText(bitmap);
                     }
+                    else if(quickTextDetectBtn.isSelected())
+                    {
+                        bitmap = rotateImage(bitmap, file.getAbsolutePath());
+                        quickTextDetection(bitmap,false);
+
+                    }
+                    else if(documentDetectBtn.isSelected())
+                    {
+                        bitmap = rotateImage(bitmap, file.getAbsolutePath());
+                        quickTextDetection(bitmap,true);
+                    }
+                    else if(faceDetectionBtn.isSelected())
+                    {
+                        if(activeCamera == CAMERA_FACING_BACK)
+                        {
+                            bitmap = rotateImage(bitmap, file.getAbsolutePath());
+                        }
+                        detectFace(bitmap);
+
+                    }
+                    else if(colorRecognitionBtn.isSelected())
+                    {
+                        bitmap = rotateImage(bitmap, file.getAbsolutePath());
+                        detectColor(bitmap);
+
+                    }
+
                     showImageView.setImageBitmap(bitmap);
                     showImageViewPreview.setImageBitmap(bitmap);
 
+
                 } else {
+                    quickCaptureText = "no text found";
+                    textview.setText(quickCaptureText);
+                    textToSpeech.speak(quickCaptureText.toString(), TextToSpeech.QUEUE_FLUSH, null);
                     Toast.makeText(CameraActivity.this,
                             "Failed to Capture the picture. kindly Try Again:",
                             Toast.LENGTH_LONG).show();
@@ -198,19 +266,213 @@ public class CameraActivity extends AppCompatActivity {
         }
     };
 
+    private void detectColor(Bitmap imageBitmap) {
+        new ColorFinder(new ColorFinder.CallbackInterface() {
+            @Override
+            public void onCompleted(String color) {
+                Toast.makeText(CameraActivity.this, "Your Color : " + color, Toast.LENGTH_SHORT).show();
+            }
+        }).findDominantColor(imageBitmap);
+    }
 
+    private void detectFace(Bitmap imageBitmap) {
+        InputImage image = InputImage.fromBitmap(imageBitmap,0);
+        FaceDetectorOptions highAccuracyOpts =
+                new FaceDetectorOptions.Builder()
+                        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+                        .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
+                        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
+                        .build();
+        FaceDetector detector = FaceDetection.getClient(highAccuracyOpts);
+// Or use the default options:
+// FaceDetector detector = FaceDetection.getClient();
+        Task<List<Face>> result =
+                detector.process(image)
+                        .addOnSuccessListener(
+                                new OnSuccessListener<List<Face>>() {
+                                    @Override
+                                    public void onSuccess(List<Face> faces) {
+                                        // Task completed successfully
+                                        // ...
+
+                                        for (Face face : faces) {
+                                            Rect bounds = face.getBoundingBox();
+                                            float rotY = face.getHeadEulerAngleY();  // Head is rotated to the right rotY degrees
+                                            float rotZ = face.getHeadEulerAngleZ();  // Head is tilted sideways rotZ degrees
+
+                                            // If landmark detection was enabled (mouth, ears, eyes, cheeks, and
+                                            // nose available):
+                                            FaceLandmark leftEar = face.getLandmark(FaceLandmark.LEFT_EAR);
+                                            if (leftEar != null) {
+                                                PointF leftEarPos = leftEar.getPosition();
+                                            }
+
+                                            // If contour detection was enabled:
+                                     /*       List<PointF> leftEyeContour =
+                                                    face.getContour(FaceContour.LEFT_EYE).getPoints();
+                                            List<PointF> upperLipBottomContour =
+                                                    face.getContour(FaceContour.UPPER_LIP_BOTTOM).getPoints();*/
+                                            // If classification was enabled:
+                                            if (face.getSmilingProbability() != null) {
+                                                float smileProb = face.getSmilingProbability();
+
+                                                //todo vasilis add here optimization on this
+                                                if(smileProb > 0.50 && smileProb <= 0.80)
+                                                {
+                                                    Toast.makeText(CameraActivity.this,
+                                                            "face detected probably smiling?"+ smileProb,Toast.LENGTH_SHORT).show();
+                                                } else if (smileProb > 0.80) {
+
+                                                    Toast.makeText(CameraActivity.this,
+                                                            "face detected and SMILIIIING!"+ smileProb,Toast.LENGTH_SHORT).show();
+                                                    AssetFileDescriptor afd = null;
+                                                    try {
+                                                        afd = getAssets().openFd("supersonic.mp3");
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                    MediaPlayer player = new MediaPlayer();
+                                                    try {
+                                                        player.setDataSource(afd.getFileDescriptor(),afd.getStartOffset(),afd.getLength());
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                    try {
+                                                        player.prepare();
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                    player.start();
+                                                }
+                                                else if(smileProb < 0.50)
+                                                {
+                                                    Toast.makeText(CameraActivity.this,
+                                                            "face detected and why so serious???"+ smileProb,Toast.LENGTH_SHORT).show();
+                                                }
+                                            }
+                                            if (face.getRightEyeOpenProbability() != null) {
+                                                float rightEyeOpenProb = face.getRightEyeOpenProbability();
+                                            }
+
+                                            // If face tracking was enabled:
+                                            if (face.getTrackingId() != null) {
+                                                int id = face.getTrackingId();
+                                            }
+                                        }
+
+
+                                    }
+                                })
+                        .addOnFailureListener(
+                                new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        // Task failed with an exception
+                                        // ...
+                                        Toast.makeText(CameraActivity.this,
+                                                "no face detected",Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+    }
+    private void quickTextDetection(Bitmap bitmap, boolean isDocument)
+    {
+        Util.scaleBitmapDown(bitmap,640);
+        String convertedBitmapResult=Util.convertBitmap(bitmap);
+
+// ...
+        mFunctions = FirebaseFunctions.getInstance();
+        // Create json request to cloud vision
+        JsonObject request = new JsonObject();
+// Add image to request
+        JsonObject image = new JsonObject();
+        image.add("content", new JsonPrimitive(convertedBitmapResult));
+        request.add("image", image);
+//Add features to the request
+        JsonObject feature = new JsonObject();
+
+// Alternatively, for DOCUMENT_TEXT_DETECTION:
+        if(isDocument)
+        {
+            feature.add("type", new JsonPrimitive("DOCUMENT_TEXT_DETECTION"));
+        }
+        else
+        {
+            feature.add("type", new JsonPrimitive("TEXT_DETECTION"));
+        }
+
+        JsonArray features = new JsonArray();
+        features.add(feature);
+        request.add("features", features);
+        //provide language hints to assist with language detection
+        JsonObject imageContext = new JsonObject();
+        JsonArray languageHints = new JsonArray();
+        languageHints.add("en");
+        imageContext.add("languageHints", languageHints);
+        request.add("imageContext", imageContext);
+
+        annotateImage(request.toString())
+                .addOnCompleteListener(new OnCompleteListener<JsonElement>() {
+                    @Override
+                    public void onComplete(@NonNull Task<JsonElement> task) {
+                        if (!task.isSuccessful()) {
+                            // Task failed with an exception
+                            // ...
+                            quickCaptureText = "no text found";
+                            textview.setText(quickCaptureText);
+                            textToSpeech.speak(quickCaptureText.toString(), TextToSpeech.QUEUE_FLUSH, null);
+                        } else {
+                            // Task completed successfully
+                            // ...
+                            JsonObject annotation = task.getResult().getAsJsonArray().get(0).getAsJsonObject().get("fullTextAnnotation").getAsJsonObject();
+                            System.out.format("%nComplete annotation:%n");
+                            System.out.format("%s%n", annotation.get("text").getAsString());
+                            quickCaptureText = annotation.get("text").getAsString();
+                            textToSpeech.speak(quickCaptureText.toString(), TextToSpeech.QUEUE_FLUSH, null);
+                            textview.setText(quickCaptureText);
+                        }
+                    }
+                });
+    }
+    private Task<JsonElement> annotateImage(String requestJson) {
+        return mFunctions
+                .getHttpsCallable("annotateImage")
+                .call(requestJson)
+                .continueWith(new Continuation<HttpsCallableResult, JsonElement>() {
+                    @Override
+                    public JsonElement then(@NonNull Task<HttpsCallableResult> task) {
+                        // This continuation runs on either success or failure, but if the task
+                        // has failed then getResult() will throw an Exception which will be
+                        // propagated down.
+                        return JsonParser.parseString(new Gson().toJson(task.getResult().getData()));
+                    }
+                });
+    }
     private void setViews() {
+        //bottom buttons
         captureButton = (Button) findViewById(R.id.button_capture);
+        button_switch_camera = findViewById(R.id.button_switch_camera);
         mCameraView = findViewById(R.id.surfaceView);
-        flashtBtn = findViewById(R.id.flashtBtn);
+        flashBtn = findViewById(R.id.flashBtn);
         info = findViewById(R.id.info);
-        zoomControls = (ZoomControls) findViewById(R.id.CAMERA_ZOOM_CONTROLS);
-        zoomBtn = findViewById(R.id.zoomBtn);
+        blackwhite = findViewById(R.id.blackwhite);
         showImageView = findViewById(R.id.showImageView);
         showImageViewPreview =  findViewById(R.id.showImageViewPreview);
+        //zoom controls
+        zoomControls = (ZoomControls) findViewById(R.id.CAMERA_ZOOM_CONTROLS);
+        //function buttons
+        zoomBtn = findViewById(R.id.zoomBtn);
         textDetectBtn = findViewById(R.id.textDetectBtn);
+        quickTextDetectBtn = findViewById(R.id.quickTextDetectBtn);
+        documentDetectBtn = findViewById(R.id.documentDetectBtn);
+        faceDetectionBtn = findViewById(R.id.faceDetectionBtn);
+        colorRecognitionBtn = findViewById(R.id.colorRecognitionBtn);
+        lightFunctionBtn = findViewById(R.id.lightFunctionBtn);
+        imageDescriptionBtn = findViewById(R.id.imageDescriptionBtn);
+        noteFunctionBtn = findViewById(R.id.noteFunctionBtn);
+        settingsBtn = findViewById(R.id.settingsBtn);
+        helpBtn = findViewById(R.id.helpBtn);
+        //text detections result textview
         textview = findViewById(R.id.textview);
-
 
     }
 
@@ -235,22 +497,214 @@ public class CameraActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                /* camera.takePicture(null, null, mPicture);*/
-                if(!textDetection)
+                if(!textDetectBtn.isSelected())
                 {
-                    textDetection = true;
                     textDetectBtn.setSelected(true);
                     deactivateOtherButtons(textDetectBtn.getTag().toString());
                 }
                 else
                 {
-                    textDetection = false;
                     textDetectBtn.setSelected(false);
                 }
 
 
             }
         });
+
+        quickTextDetectBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                quickTextDetectBtn.setSelected(true);
+                deactivateOtherButtons(quickTextDetectBtn.getTag().toString());
+
+
+
+            }
+        });
+        documentDetectBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                documentDetectBtn.setSelected(true);
+                deactivateOtherButtons(documentDetectBtn.getTag().toString());
+
+
+
+            }
+        });
+        faceDetectionBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                faceDetectionBtn.setSelected(true);
+                deactivateOtherButtons(faceDetectionBtn.getTag().toString());
+                negativeCam = false;
+                textDetection = false;
+          /*      if (isPreviewing){
+                    camera.stopPreview();
+                }
+                getCameraInstance();*/
+
+            }
+        });
+
+        button_switch_camera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                button_switch_camera.setSelected(true);
+                if(activeCamera == CAMERA_FACING_BACK)
+                {
+                    activeCamera = CAMERA_FACING_FRONT;
+                }
+                else
+                {
+                    activeCamera = CAMERA_FACING_BACK;
+                }
+
+
+                Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+                int cameraCount = Camera.getNumberOfCameras();
+
+                for (int i = 0; i < cameraCount; i++) {
+                    Camera.getCameraInfo(i, cameraInfo);
+                    if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                        camera.release();
+                        camera = Camera.open(i);
+                        parameters = camera.getParameters();
+                        setCameraDisplayOrientation(CameraActivity.this,0,camera);
+                        parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
+
+                        List<Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
+
+
+                        Camera.Size sizePicture = (supportedSizes.get(0));
+
+                        parameters.setPictureSize(supportedSizes.get(0).width,supportedSizes.get(0).height);
+                        camera.setParameters(parameters);
+                        try {
+                            camera.setPreviewDisplay(mCameraView.getHolder());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        camera.startPreview();
+                        break;
+                    }
+                }
+
+
+
+
+
+            }
+        });
+        zoomBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isPreviewing){
+                    camera.stopPreview();
+                }
+
+                activeCamera = CAMERA_FACING_BACK;
+                negativeCam = false;
+                textDetection = false;
+                mViewModel.setZoomOn(true);
+                zoomBtn.setSelected(true);
+                zoomControls.setVisibility(View.VISIBLE);
+                blackwhite.setVisibility(View.VISIBLE);
+                deactivateOtherButtons(zoomBtn.getTag().toString());
+
+                getCameraInstance();            }
+        });
+        blackwhite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(!negativeCam)
+                {
+                    negativeCam = true;
+                }
+                else
+                {
+                    negativeCam = false;
+                }
+                if (isPreviewing){
+                    camera.stopPreview();
+                }
+                getCameraInstance();
+            }
+        });
+        colorRecognitionBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isPreviewing){
+                    camera.stopPreview();
+                }
+                activeCamera = CAMERA_FACING_BACK;
+                negativeCam = false;
+                textDetection = false;
+                getCameraInstance();
+                colorRecognitionBtn.setSelected(true);
+                deactivateOtherButtons(colorRecognitionBtn.getTag().toString());
+
+
+
+            }
+        });
+        lightFunctionBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                colorRecognitionBtn.setSelected(true);
+                deactivateOtherButtons(colorRecognitionBtn.getTag().toString());
+                if (isPreviewing){
+                    camera.stopPreview();
+                }
+                activeCamera = CAMERA_FACING_BACK;
+                negativeCam = false;
+                textDetection = false;
+                getCameraInstance();
+            }
+        });
+        imageDescriptionBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                imageDescriptionBtn.setSelected(true);
+                deactivateOtherButtons(imageDescriptionBtn.getTag().toString());
+                if (isPreviewing){
+                    camera.stopPreview();
+                }
+                activeCamera = CAMERA_FACING_BACK;
+                negativeCam = false;
+                textDetection = false;
+/*
+                getCameraInstance();
+*/
+            }
+        });
+        settingsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                settingsBtn.setSelected(true);
+                deactivateOtherButtons(settingsBtn.getTag().toString());
+                if (isPreviewing){
+                    camera.stopPreview();
+                }
+                activeCamera = CAMERA_FACING_BACK;
+                negativeCam = false;
+                textDetection = false;
+                showSettingsActivity();
+                //getCameraInstance();
+            }
+        });
+
     }
+
+    private void showSettingsActivity() {
+        Intent captureIntent = new Intent(CameraActivity.this, WelcomeActivity.class);
+        startActivity(captureIntent);
+        finish();
+    }
+
     private void detectText(Bitmap imageBitmap) {
         InputImage image = InputImage.fromBitmap(imageBitmap,0);
         TextRecognizer textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
@@ -297,7 +751,7 @@ public class CameraActivity extends AppCompatActivity {
             public void surfaceCreated(SurfaceHolder holder) {
                 if (checkHasCameraPermission(CameraActivity.this)) {
 
-                    camera = Camera.open();
+                    camera = Camera.open(activeCamera);
                     parameters = camera.getParameters();
                     setCameraDisplayOrientation(CameraActivity.this,0,camera);
                     parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
@@ -325,7 +779,10 @@ public class CameraActivity extends AppCompatActivity {
                 parameters = camera.getParameters();
                 setCameraDisplayOrientation(CameraActivity.this,0,camera);
                 parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
-
+                if(negativeCam)
+                {
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_NEGATIVE);
+                }
 
                 if (parameters.isZoomSupported() && parameters.isSmoothZoomSupported()) {
                     //most phones
@@ -383,7 +840,7 @@ public class CameraActivity extends AppCompatActivity {
                     //no zoom on phone
                     zoomControls.setVisibility(View.GONE);
                 }
-                flashtBtn.setOnClickListener(new View.OnClickListener() {
+                flashBtn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         if(!flashOn)
@@ -392,7 +849,7 @@ public class CameraActivity extends AppCompatActivity {
                             flashOn = true;
                             camera.setParameters(parameters);
                             mViewModel.setFlashOn(false);
-                            flashtBtn.setBackground(getDrawable(R.drawable.flash_on_icon));
+                            flashBtn.setBackground(getDrawable(R.drawable.flash_on_icon));
                         }
                         else
                         {
@@ -400,21 +857,14 @@ public class CameraActivity extends AppCompatActivity {
                             flashOn = false;
                             camera.setParameters(parameters);
                             mViewModel.setFlashOn(true);
-                            flashtBtn.setBackground(getDrawable(R.drawable.flashoff));
+                            flashBtn.setBackground(getDrawable(R.drawable.flashoff));
 
                         }
 
                     }
                 });
 
-                zoomBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        mViewModel.setZoomOn(true);
-                        zoomControls.setVisibility(View.VISIBLE);
-                      //  camera.takePicture(null, null, mPicture);
-                    }
-                });
+
                 camera.setParameters(parameters);
 
                 try {

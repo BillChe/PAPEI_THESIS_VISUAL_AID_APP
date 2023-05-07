@@ -30,7 +30,7 @@ public class Util {
     }
 
 
-    public Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
+    public static Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
         int originalWidth = bitmap.getWidth();
         int originalHeight = bitmap.getHeight();
         int resizedWidth = maxDimension;
@@ -47,6 +47,15 @@ public class Util {
             resizedWidth = maxDimension;
         }
         return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
+    }
+    // Convert bitmap to base64 encoded string
+    public static String convertBitmap(Bitmap bitmap) {
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+        byte[] imageBytes = byteArrayOutputStream.toByteArray();
+        String base64encoded = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
+        return base64encoded;
     }
 
     public String bitmapToBASE64(Bitmap bitmap)
