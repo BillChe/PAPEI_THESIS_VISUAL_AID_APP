@@ -3,6 +3,7 @@ package com.example.visual_aid_app;
 import static android.content.ContentValues.TAG;
 
 import static com.example.visual_aid_app.Util.checkHasCameraPermission;
+import static com.example.visual_aid_app.Util.checkHasWritgeExternalStoragePermission;
 import static com.example.visual_aid_app.ZoomActivity.decodeStrem;
 import static com.example.visual_aid_app.ZoomActivity.rotateImage;
 
@@ -15,6 +16,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -26,8 +28,11 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -46,6 +51,9 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.vision.CameraSource;
+import com.google.android.gms.vision.Detector;
+import com.google.android.gms.vision.text.TextBlock;
 import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.functions.HttpsCallableResult;
 import com.google.gson.Gson;
@@ -75,10 +83,11 @@ import java.util.List;
 import java.util.Locale;
 
 public class CameraActivity extends AppCompatActivity {
-
+    private CameraSource mCameraSource;
     private Camera camera;
     Camera.Parameters parameters;
 /*    private CameraPreview mPreview;*/
+private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     Button captureButton ;
     protected String imageFilePath,quickCaptureText;
     private SurfaceView mCameraView;
@@ -139,7 +148,15 @@ public class CameraActivity extends AppCompatActivity {
         mViewModel.setTextDetection(true);
         //camera init
         // Create an instance of Camera
-        getCameraInstance();
+        if (checkHasCameraPermission(CameraActivity.this)
+                && checkHasWritgeExternalStoragePermission(CameraActivity.this)) {
+            getCameraInstance();
+        }
+        else
+        {
+            requestCameraPermission();
+        }
+
     }
 
     private void fillButtonList(List<Button> buttonFunctionsList) {
@@ -175,24 +192,41 @@ public class CameraActivity extends AppCompatActivity {
 
             FileOutputStream pictureFile = null;
             try {
-                File miDirs = new File(
-                        getExternalFilesDir(Environment.DIRECTORY_PICTURES) + "/myphotos");
-                if (!miDirs.exists())
-                    miDirs.mkdirs();
-
                 final Calendar c = Calendar.getInstance();
                 String new_Date = c.get(Calendar.DAY_OF_MONTH) + "-"
                         + ((c.get(Calendar.MONTH)) + 1) + "-"
                         + c.get(Calendar.YEAR) + " " + c.get(Calendar.HOUR)
                         + "-" + c.get(Calendar.MINUTE) + "-"
                         + c.get(Calendar.SECOND);
+                File miDirs = new File(
+                        getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos"+ "/%s.jpg", "te1t(" + new_Date + ")");
+                if (!miDirs.exists())
+                    miDirs.mkdirs();
+
+
 
                 imageFilePath = String.format(
-                        getExternalFilesDir(Environment.DIRECTORY_PICTURES) + "/myphotos"
+                        getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos"
                                 + "/%s.jpg", "te1t(" + new_Date + ")");
 
                 Uri selectedImage = Uri.parse(imageFilePath);
                 File file = new File(imageFilePath);
+                if(!file.exists()){
+                    try {
+                        file.createNewFile();
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }else{
+                    file.delete();
+                    try {
+                        file.createNewFile();
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
                 String path = file.getAbsolutePath();
                 Bitmap bitmap = null;
 
@@ -210,6 +244,7 @@ public class CameraActivity extends AppCompatActivity {
                     }
                 }
                 if (bitmap != null) {
+                    MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, new_Date , "image:"+new_Date);
                     Toast.makeText(CameraActivity.this,
                                     "Picture Captured Successfully:", Toast.LENGTH_LONG)
                             .show();
@@ -222,7 +257,8 @@ public class CameraActivity extends AppCompatActivity {
                     else if(quickTextDetectBtn.isSelected())
                     {
                         bitmap = rotateImage(bitmap, file.getAbsolutePath());
-                        quickTextDetection(bitmap,false);
+                        //quickTextDetection(bitmap,false);
+                        detectText(bitmap);
 
                     }
                     else if(documentDetectBtn.isSelected())
@@ -388,6 +424,66 @@ public class CameraActivity extends AppCompatActivity {
                                     }
                                 });
     }
+    /**
+     * Init camera source with needed properties,
+     * then set camera view to surface view.
+     */
+    private void startCamera() {
+
+        textRecognizer = new com.google.android.gms.vision.text.TextRecognizer.Builder(getApplicationContext()).build();
+
+        if (textRecognizer.isOperational()) {
+
+            mCameraSource = new CameraSource.Builder(getApplicationContext(),textRecognizer)
+                    .setFacing(CameraSource.CAMERA_FACING_BACK)
+                    .setRequestedPreviewSize(1280, 1024)
+                    .setAutoFocusEnabled(true)
+                    .setRequestedFps(2.0f)
+                    .build();
+
+            //If permission is granted cameraSource started and passed it to surfaceView
+            mCameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
+                @Override
+                public void surfaceCreated(SurfaceHolder holder) {
+                    if(checkHasCameraPermission(CameraActivity.this)){
+
+                        try {
+                            mCameraSource.start(mCameraView.getHolder());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                    else {
+
+                        Log.i("surfaceCreated","Permission request sent");
+                        requestCameraPermission();
+                    }
+                }
+
+                @Override
+                public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                }
+
+                @Override
+                public void surfaceDestroyed(SurfaceHolder holder) {
+                    mCameraSource.stop();
+                }
+            });
+            final Handler handler = new Handler();
+            final int delay = 1000;
+
+            handler.postDelayed(new Runnable() {
+                public void run() {
+                    detectText();
+                    handler.postDelayed(this, delay);
+
+                }
+            }, delay);
+
+
+        }
+    }
     private void quickTextDetection(Bitmap bitmap, boolean isDocument)
     {
         Util.scaleBitmapDown(bitmap,640);
@@ -507,6 +603,12 @@ public class CameraActivity extends AppCompatActivity {
                 Toast.makeText(CameraActivity.this,"Show info for selected function",Toast.LENGTH_SHORT).show();
             }
         });
+        helpBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(CameraActivity.this,"Show info for selected function",Toast.LENGTH_SHORT).show();
+            }
+        });
 
         textDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -529,6 +631,7 @@ public class CameraActivity extends AppCompatActivity {
                 mViewModel.setTextDetection(true);
                 quickTextDetectBtn.setSelected(true);
                 deactivateOtherButtons(quickTextDetectBtn.getTag().toString());
+                startCamera();
 
             }
         });
@@ -743,6 +846,53 @@ public class CameraActivity extends AppCompatActivity {
         finish();
     }
 
+    private void showHelpActivity() {
+        Intent captureIntent = new Intent(CameraActivity.this, WelcomeActivity.class);
+        startActivity(captureIntent);
+
+    }
+
+    /**
+     * Gets TextBlock from TextRecognizer, set Text to TextView
+     * and Speaks it if listen button is clicked
+     */
+    private void detectText(){
+
+        textRecognizer.setProcessor(new Detector.Processor<TextBlock>() {
+            @Override
+            public void receiveDetections(Detector.Detections<TextBlock> detections) {
+                final SparseArray<TextBlock> items = detections.getDetectedItems();
+                if (items.size() != 0 ){
+                    textview.post(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            //Gets strings from TextBlock and adds to StringBuilder
+                            final StringBuilder stringBuilder = new StringBuilder();
+                            for(int i=0; i<items.size(); i++)
+                                stringBuilder.append(items.valueAt(i).getValue());
+
+                            //Set Text to screen and speaks it if button clicked
+                            textview.setText(stringBuilder.toString());
+                            textToSpeech.speak(stringBuilder.toString(), TextToSpeech.QUEUE_FLUSH, null);
+                         /*   findViewById(R.id.voice).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    Log.i("OnClickListener","Text is reading");
+                                    textToSpeech.speak(stringBuilder.toString(), TextToSpeech.QUEUE_FLUSH, null);
+                                }
+                            });*/
+                        }
+                    });
+                }
+            }
+            @Override
+            public void release() {
+            }
+        });
+    }
+
+
     private void detectText(Bitmap imageBitmap) {
         InputImage image = InputImage.fromBitmap(imageBitmap,0);
         TextRecognizer textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
@@ -788,7 +938,7 @@ public class CameraActivity extends AppCompatActivity {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 if (checkHasCameraPermission(CameraActivity.this)) {
-
+                    textRecognizer = new com.google.android.gms.vision.text.TextRecognizer.Builder(getApplicationContext()).build();
                     camera = Camera.open(activeCamera);
                     parameters = camera.getParameters();
                     setCameraDisplayOrientation(CameraActivity.this,0,camera);
@@ -925,6 +1075,26 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(grantResults.length>0)
+        {
+            if(checkHasCameraPermission(CameraActivity.this) && checkHasWritgeExternalStoragePermission(CameraActivity.this))
+            {
+               getCameraInstance();
+
+            }
+            else
+            {
+                Toast.makeText(this,"Permission Not Granted",Toast.LENGTH_SHORT).show();
+                requestCameraPermission();
+            }
+        }
+
     }
 
     private void setCameraDisplayOrientation(Activity activity, int cameraId,
@@ -967,7 +1137,11 @@ public class CameraActivity extends AppCompatActivity {
     void requestCameraPermission() {
         ActivityCompat.requestPermissions(
                 this,
-                new String[]{Manifest.permission.CAMERA},
+                new String[]{
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION},
                 cameraPermissionID
         );
     }

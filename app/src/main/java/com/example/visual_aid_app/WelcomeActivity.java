@@ -1,9 +1,16 @@
 package com.example.visual_aid_app;
 
-import androidx.appcompat.app.AppCompatActivity;
+import static com.example.visual_aid_app.Util.checkHasCameraPermission;
+import static com.example.visual_aid_app.Util.checkHasWritgeExternalStoragePermission;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.hardware.camera2.CameraAccessException;
@@ -13,6 +20,7 @@ import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -34,9 +42,20 @@ public class WelcomeActivity extends AppCompatActivity {
         config.locale = locale;
         getBaseContext().getResources().updateConfiguration(config,
                 getBaseContext().getResources().getDisplayMetrics());
-        playWelcomeMessage();
+        if(checkHasCameraPermission(WelcomeActivity.this) &&
+                checkHasWritgeExternalStoragePermission(WelcomeActivity.this))
+        {
+            playWelcomeMessage();
+            initView();
+            openCamera();
+        }
+        else
+        {
+            requestCameraPermission();
+        }
 
-        initView();
+
+
     }
 
     private void initView() {
@@ -126,6 +145,46 @@ public class WelcomeActivity extends AppCompatActivity {
 
 
 
+    }
+    /**
+     * Creates a camera permission request
+     */
+    void requestCameraPermission() {
+        ActivityCompat.requestPermissions(
+                this,
+                new String[]{
+                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        android.Manifest.permission.CAMERA,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION},
+                101
+        );
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(grantResults.length>0)
+        {
+            if (checkHasCameraPermission(WelcomeActivity.this)
+                    && checkHasWritgeExternalStoragePermission(WelcomeActivity.this)) {
+                Toast.makeText(this,"Permission Granted",Toast.LENGTH_SHORT).show();
+                playWelcomeMessage();
+                initView();
+                openCamera();
+
+            }
+            else
+            {
+                Toast.makeText(this,"Permission Not Granted",Toast.LENGTH_SHORT).show();
+            }
+
+        }
+    }
+
+    private void openCamera() {
+        Intent captureIntent = new Intent(WelcomeActivity.this, CameraActivity.class);
+        startActivity(captureIntent);
+        finish();
     }
 
     private void playWelcomeMessage() {

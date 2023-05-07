@@ -1,5 +1,6 @@
 package com.example.visual_aid_app;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -17,7 +18,10 @@ public class Util {
         return ActivityCompat.checkSelfPermission(context,
                 android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
     }
-
+    public static boolean checkHasWritgeExternalStoragePermission(Context context) {
+        return ActivityCompat.checkSelfPermission(context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
     /** Check if this device has a camera */
     public static boolean checkCameraHardware(Context context) {
         if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)){
@@ -52,7 +56,7 @@ public class Util {
     public static String convertBitmap(Bitmap bitmap) {
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
         byte[] imageBytes = byteArrayOutputStream.toByteArray();
         String base64encoded = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
         return base64encoded;
