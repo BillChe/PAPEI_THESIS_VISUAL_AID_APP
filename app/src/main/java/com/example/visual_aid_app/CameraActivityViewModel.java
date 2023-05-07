@@ -2,11 +2,35 @@ package com.example.visual_aid_app;
 
 import android.content.Context;
 
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
 import androidx.lifecycle.ViewModel;
 
-public class CameraActivityViewModel extends ViewModel {
+public class CameraActivityViewModel extends BaseObservable {
     private Context context;
-    private boolean flashOn,greyScaleOn,saveImageOn,timerOn,autoDetectOn,numberDetectionOn,autoSave,zoomOn;
+    @Bindable
+    private boolean flashOn;
+    @Bindable
+    private boolean greyScaleOn;
+    @Bindable
+    private boolean saveImageOn;
+    @Bindable
+    private boolean timerOn;
+    @Bindable
+    private boolean autoDetectOn;
+    @Bindable
+    private boolean numberDetectionOn;
+    @Bindable
+    private boolean autoSave;
+    @Bindable
+    private boolean zoomOn;
+    @Bindable
+    private boolean faceDetectOn;
+    @Bindable
+    private boolean noteOn;
+    @Bindable
+    private boolean textDetection;
+
     //active camera is front (selfie) or back
     private int activeCamera = 1;
 
@@ -58,6 +82,7 @@ public class CameraActivityViewModel extends ViewModel {
 
     public void setSaveImageOn(boolean saveImageOn) {
         this.saveImageOn = saveImageOn;
+        notifyPropertyChanged(BR.saveImageOn);
     }
 
     public boolean isTimerOn() {
@@ -90,6 +115,7 @@ public class CameraActivityViewModel extends ViewModel {
 
     public void setAutoSave(boolean autoSave) {
         this.autoSave = autoSave;
+        notifyPropertyChanged(BR.autoSave);
     }
 
     public int getActiveCamera() {
@@ -106,5 +132,33 @@ public class CameraActivityViewModel extends ViewModel {
 
     public void setZoomOn(boolean zoomOn) {
         this.zoomOn = zoomOn;
+        notifyPropertyChanged(BR.zoomOn);
+    }
+
+    public boolean isFaceDetectOn() {
+        return faceDetectOn;
+    }
+
+    public void setFaceDetectOn(boolean faceDetectOn) {
+        this.faceDetectOn = faceDetectOn;
+        notifyPropertyChanged(BR.faceDetectOn);
+    }
+
+    public boolean isNoteOn() {
+        return noteOn;
+    }
+
+    public void setNoteOn(boolean noteOn) {
+        this.noteOn = noteOn;
+        notifyPropertyChanged(BR.noteOn);
+    }
+
+    public boolean isTextDetection() {
+        return textDetection;
+    }
+
+    public void setTextDetection(boolean textDetection) {
+        this.textDetection = textDetection;
+        notifyPropertyChanged(BR.textDetection);
     }
 }

@@ -33,6 +33,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -83,17 +84,15 @@ public class CameraActivity extends AppCompatActivity {
     private SurfaceView mCameraView;
     private TextView textview;
     ZoomControls zoomControls;
-
     public static final int CAMERA_FACING_BACK = 0;
-    /** @deprecated */
-
     public static final int CAMERA_FACING_FRONT = 1;
     private final int cameraPermissionID = 101;
     int currentZoomLevel = 0, maxZoomLevel = 0;
     boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn, textDetection, negativeCam;
     private Button zoomBtn, textDetectBtn,
             quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
-            colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,settingsBtn,helpBtn,button_switch_camera;
+            colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,settingsBtn,helpBtn,
+            button_switch_camera, button_savenote;
     private ImageView flashBtn, info, blackwhite;
     ImageView showImageView,showImageViewPreview;
     private CameraActivityViewModel mViewModel;
@@ -103,6 +102,7 @@ public class CameraActivity extends AppCompatActivity {
     private FirebaseFunctions mFunctions;
     private TextToSpeech textToSpeech;
     private int activeCamera = CAMERA_FACING_BACK;
+    private EditText noteET;
 
 
     @Override
@@ -113,6 +113,7 @@ public class CameraActivity extends AppCompatActivity {
         //viewModel Setup
         mViewModel = new CameraActivityViewModel(CameraActivity.this);
         context = CameraActivity.this;
+        binding.setViewModel(mViewModel);
 
         // Init TextToSpeech and set language
         textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
@@ -124,13 +125,18 @@ public class CameraActivity extends AppCompatActivity {
             }
         });
 
-
         setViews();
         setListeners();
         //fill Buttons List
         buttonFunctionsList= new ArrayList<>();
         fillButtonList(buttonFunctionsList);
 
+        //init of view model attrs
+        mViewModel.setSaveImageOn(true);
+        mViewModel.setNoteOn(false);
+        //init view with text detection
+        textDetectBtn.setSelected(true);;
+        mViewModel.setTextDetection(true);
         //camera init
         // Create an instance of Camera
         getCameraInstance();
@@ -145,6 +151,7 @@ public class CameraActivity extends AppCompatActivity {
         buttonFunctionsList.add(colorRecognitionBtn);
         buttonFunctionsList.add(lightFunctionBtn);
         buttonFunctionsList.add(noteFunctionBtn);
+        buttonFunctionsList.add(zoomBtn);
         buttonFunctionsList.add(settingsBtn);
         buttonFunctionsList.add(helpBtn);
 
@@ -228,6 +235,7 @@ public class CameraActivity extends AppCompatActivity {
                         if(activeCamera == CAMERA_FACING_BACK)
                         {
                             bitmap = rotateImage(bitmap, file.getAbsolutePath());
+
                         }
                         detectFace(bitmap);
 
@@ -238,6 +246,12 @@ public class CameraActivity extends AppCompatActivity {
                         detectColor(bitmap);
 
                     }
+                    else if(lightFunctionBtn.isSelected())
+                    {
+                        bitmap = rotateImage(bitmap, file.getAbsolutePath());
+
+                    }
+
 
                     showImageView.setImageBitmap(bitmap);
                     showImageViewPreview.setImageBitmap(bitmap);
@@ -456,6 +470,7 @@ public class CameraActivity extends AppCompatActivity {
         info = findViewById(R.id.info);
         blackwhite = findViewById(R.id.blackwhite);
         showImageView = findViewById(R.id.showImageView);
+        button_savenote = findViewById(R.id.button_savenote);
         showImageViewPreview =  findViewById(R.id.showImageViewPreview);
         //zoom controls
         zoomControls = (ZoomControls) findViewById(R.id.CAMERA_ZOOM_CONTROLS);
@@ -473,7 +488,7 @@ public class CameraActivity extends AppCompatActivity {
         helpBtn = findViewById(R.id.helpBtn);
         //text detections result textview
         textview = findViewById(R.id.textview);
-
+        noteET = findViewById(R.id.noteET);
     }
 
     private void setListeners() {
@@ -496,17 +511,11 @@ public class CameraActivity extends AppCompatActivity {
         textDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               /* camera.takePicture(null, null, mPicture);*/
-                if(!textDetectBtn.isSelected())
-                {
-                    textDetectBtn.setSelected(true);
-                    deactivateOtherButtons(textDetectBtn.getTag().toString());
-                }
-                else
-                {
-                    textDetectBtn.setSelected(false);
-                }
-
+                mViewModel.setZoomOn(false);
+                mViewModel.setFaceDetectOn(false);
+                mViewModel.setTextDetection(true);
+                textDetectBtn.setSelected(true);
+                deactivateOtherButtons(textDetectBtn.getTag().toString());
 
             }
         });
@@ -514,45 +523,43 @@ public class CameraActivity extends AppCompatActivity {
         quickTextDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                mViewModel.setZoomOn(false);
+                mViewModel.setFaceDetectOn(false);
+                mViewModel.setNoteOn(false);
+                mViewModel.setTextDetection(true);
                 quickTextDetectBtn.setSelected(true);
                 deactivateOtherButtons(quickTextDetectBtn.getTag().toString());
-
-
 
             }
         });
         documentDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                mViewModel.setZoomOn(false);
+                mViewModel.setFaceDetectOn(false);
+                mViewModel.setNoteOn(false);
+                mViewModel.setTextDetection(true);
                 documentDetectBtn.setSelected(true);
                 deactivateOtherButtons(documentDetectBtn.getTag().toString());
-
-
-
             }
         });
         faceDetectionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                mViewModel.setZoomOn(false);
+                mViewModel.setNoteOn(false);
+                mViewModel.setTextDetection(false);
                 faceDetectionBtn.setSelected(true);
                 deactivateOtherButtons(faceDetectionBtn.getTag().toString());
                 negativeCam = false;
                 textDetection = false;
-          /*      if (isPreviewing){
-                    camera.stopPreview();
-                }
-                getCameraInstance();*/
-
+                mViewModel.setFaceDetectOn(true);
             }
         });
 
         button_switch_camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 button_switch_camera.setSelected(true);
                 if(activeCamera == CAMERA_FACING_BACK)
                 {
@@ -562,7 +569,6 @@ public class CameraActivity extends AppCompatActivity {
                 {
                     activeCamera = CAMERA_FACING_BACK;
                 }
-
 
                 Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
                 int cameraCount = Camera.getNumberOfCameras();
@@ -593,29 +599,24 @@ public class CameraActivity extends AppCompatActivity {
                     }
                 }
 
-
-
-
-
             }
         });
         zoomBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isPreviewing){
-                    camera.stopPreview();
-                }
-
                 activeCamera = CAMERA_FACING_BACK;
+                mViewModel.setTextDetection(false);
+
                 negativeCam = false;
                 textDetection = false;
+                mViewModel.setFaceDetectOn(false);
+                mViewModel.setNoteOn(false);
                 mViewModel.setZoomOn(true);
                 zoomBtn.setSelected(true);
                 zoomControls.setVisibility(View.VISIBLE);
                 blackwhite.setVisibility(View.VISIBLE);
                 deactivateOtherButtons(zoomBtn.getTag().toString());
-
-                getCameraInstance();            }
+               }
         });
         blackwhite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -623,46 +624,47 @@ public class CameraActivity extends AppCompatActivity {
                 if(!negativeCam)
                 {
                     negativeCam = true;
+                    parameters = camera.getParameters();
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_NEGATIVE);
+                    camera.setParameters(parameters);
                 }
                 else
                 {
                     negativeCam = false;
+                    parameters = camera.getParameters();
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_NONE);
+                    camera.setParameters(parameters);
                 }
-                if (isPreviewing){
-                    camera.stopPreview();
-                }
-                getCameraInstance();
+
             }
         });
         colorRecognitionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isPreviewing){
-                    camera.stopPreview();
-                }
                 activeCamera = CAMERA_FACING_BACK;
+                mViewModel.setFaceDetectOn(false);
+                mViewModel.setNoteOn(false);
+                mViewModel.setTextDetection(false);
+                mViewModel.setZoomOn(false);
                 negativeCam = false;
                 textDetection = false;
-                getCameraInstance();
                 colorRecognitionBtn.setSelected(true);
                 deactivateOtherButtons(colorRecognitionBtn.getTag().toString());
-
-
 
             }
         });
         lightFunctionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                colorRecognitionBtn.setSelected(true);
-                deactivateOtherButtons(colorRecognitionBtn.getTag().toString());
-                if (isPreviewing){
-                    camera.stopPreview();
-                }
+                lightFunctionBtn.setSelected(true);
+                deactivateOtherButtons(lightFunctionBtn.getTag().toString());
                 activeCamera = CAMERA_FACING_BACK;
+                mViewModel.setFaceDetectOn(false);
+                mViewModel.setNoteOn(false);
+                mViewModel.setTextDetection(false);
+                mViewModel.setZoomOn(false);
                 negativeCam = false;
                 textDetection = false;
-                getCameraInstance();
             }
         });
         imageDescriptionBtn.setOnClickListener(new View.OnClickListener() {
@@ -670,15 +672,13 @@ public class CameraActivity extends AppCompatActivity {
             public void onClick(View view) {
                 imageDescriptionBtn.setSelected(true);
                 deactivateOtherButtons(imageDescriptionBtn.getTag().toString());
-                if (isPreviewing){
-                    camera.stopPreview();
-                }
                 activeCamera = CAMERA_FACING_BACK;
                 negativeCam = false;
                 textDetection = false;
-/*
-                getCameraInstance();
-*/
+                mViewModel.setZoomOn(false);
+                mViewModel.setNoteOn(false);
+                mViewModel.setFaceDetectOn(false);
+
             }
         });
         settingsBtn.setOnClickListener(new View.OnClickListener() {
@@ -690,13 +690,51 @@ public class CameraActivity extends AppCompatActivity {
                     camera.stopPreview();
                 }
                 activeCamera = CAMERA_FACING_BACK;
+                mViewModel.setFaceDetectOn(false);
+                mViewModel.setTextDetection(false);
+                mViewModel.setZoomOn(false);
                 negativeCam = false;
                 textDetection = false;
                 showSettingsActivity();
                 //getCameraInstance();
             }
         });
+        noteFunctionBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                noteFunctionBtn.setSelected(true);
+                deactivateOtherButtons(noteFunctionBtn.getTag().toString());
+                activeCamera = CAMERA_FACING_BACK;
+                mViewModel.setFaceDetectOn(false);
+                mViewModel.setTextDetection(false);
+                mViewModel.setZoomOn(false);
+                negativeCam = false;
+                textDetection = false;
+                noteET.setVisibility(View.VISIBLE);
+                button_savenote.setEnabled(true);
+                mViewModel.setNoteOn(true);
 
+            }
+        });
+        button_savenote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(noteET.getText()!=null &&
+                        noteET.getText().length()>0)
+                {
+                    Toast.makeText(CameraActivity.this,noteET.getText(),
+                            Toast.LENGTH_LONG).show();
+                    textview.setText(noteET.getText());
+                }
+                else
+                {
+                    Toast.makeText(CameraActivity.this,"Please add a note",
+                            Toast.LENGTH_LONG).show();
+                    textToSpeech.speak("Please add a note",TextToSpeech.QUEUE_FLUSH, null);
+                }
+
+            }
+        });
     }
 
     private void showSettingsActivity() {
@@ -779,10 +817,7 @@ public class CameraActivity extends AppCompatActivity {
                 parameters = camera.getParameters();
                 setCameraDisplayOrientation(CameraActivity.this,0,camera);
                 parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
-                if(negativeCam)
-                {
-                    parameters.setColorEffect(Camera.Parameters.EFFECT_NEGATIVE);
-                }
+
 
                 if (parameters.isZoomSupported() && parameters.isSmoothZoomSupported()) {
                     //most phones
