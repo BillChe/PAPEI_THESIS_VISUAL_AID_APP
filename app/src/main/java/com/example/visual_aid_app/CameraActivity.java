@@ -16,6 +16,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
@@ -113,6 +114,10 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private int activeCamera = CAMERA_FACING_BACK;
     private EditText noteET;
 
+    ApplicationInfo applicationInfo;
+
+    String applicationName = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,7 +128,15 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         mViewModel = new CameraActivityViewModel(CameraActivity.this);
         context = CameraActivity.this;
         binding.setViewModel(mViewModel);
-
+        //get app info
+        //package name to create folder of images and files
+        PackageManager pm = getApplicationContext().getPackageManager();
+        try {
+            applicationInfo = pm.getApplicationInfo( this.getPackageName(), 0);
+        } catch (final PackageManager.NameNotFoundException e) {
+            applicationInfo = null;
+        }
+        applicationName = (String) (applicationInfo != null ? pm.getApplicationLabel(applicationInfo) : "VisualAidApp");
         // Init TextToSpeech and set language
         textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -144,7 +157,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         mViewModel.setSaveImageOn(true);
         mViewModel.setNoteOn(false);
         //init view with text detection
-        textDetectBtn.setSelected(true);;
+        textDetectBtn.setSelected(true);
         mViewModel.setTextDetection(true);
         //camera init
         // Create an instance of Camera
@@ -199,15 +212,16 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                         + "-" + c.get(Calendar.MINUTE) + "-"
                         + c.get(Calendar.SECOND);
                 File miDirs = new File(
-                        getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos"+ "/%s.jpg", "te1t(" + new_Date + ")");
+                        getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
+                                +applicationName+ "/%s.jpg", "te1t(" + new_Date + ")");
                 if (!miDirs.exists())
                     miDirs.mkdirs();
 
 
 
                 imageFilePath = String.format(
-                        getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos"
-                                + "/%s.jpg", "te1t(" + new_Date + ")");
+                        getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
+                                +applicationName+ "/%s.jpg", "te1t(" + new_Date + ")");
 
                 Uri selectedImage = Uri.parse(imageFilePath);
                 File file = new File(imageFilePath);
@@ -436,7 +450,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
             mCameraSource = new CameraSource.Builder(getApplicationContext(),textRecognizer)
                     .setFacing(CameraSource.CAMERA_FACING_BACK)
-                    .setRequestedPreviewSize(1280, 1024)
+                    .setRequestedPreviewSize(1280, 720)
                     .setAutoFocusEnabled(true)
                     .setRequestedFps(2.0f)
                     .build();
@@ -689,6 +703,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
 
                         Camera.Size sizePicture = (supportedSizes.get(0));
+                        Log.i("supportedsizes [%d]" , String.valueOf(supportedSizes.size()));
 
                         parameters.setPictureSize(supportedSizes.get(0).width,supportedSizes.get(0).height);
                         camera.setParameters(parameters);
@@ -841,7 +856,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     }
 
     private void showSettingsActivity() {
-        Intent captureIntent = new Intent(CameraActivity.this, WelcomeActivity.class);
+        Intent captureIntent = new Intent(CameraActivity.this, ScannerActivity.class);
         startActivity(captureIntent);
         finish();
     }
@@ -946,7 +961,9 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
                     List<Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
 
-
+                    Log.i("supportedsizes [%d]" , String.valueOf(supportedSizes.size()));
+                    Log.i("height [%d]" , String.valueOf(supportedSizes.get(0).height));
+                    Log.i("width [%d]" , String.valueOf(supportedSizes.get(0).width));
                     Camera.Size sizePicture = (supportedSizes.get(0));
 
                     parameters.setPictureSize(supportedSizes.get(0).width,supportedSizes.get(0).height);

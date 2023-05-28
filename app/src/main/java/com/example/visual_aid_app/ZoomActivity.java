@@ -432,6 +432,9 @@ public class ZoomActivity extends AppCompatActivity {
                 default:
                     break;
             }
+            Log.i("resizedBitmap w [%d]" , String.valueOf(bmpWidth));
+            Log.i("resizedBitmap h [%d]" , String.valueOf(bmpHeight));
+
             Bitmap resizedBitmap = Bitmap.createBitmap(bmp, 0, 0, bmpWidth,
                     bmpHeight, matrix, true);
             return resizedBitmap;
