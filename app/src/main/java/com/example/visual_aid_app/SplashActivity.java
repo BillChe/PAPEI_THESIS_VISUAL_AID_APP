@@ -15,6 +15,8 @@ import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.widget.Toast;
 
+import com.example.visual_aid_app.activities.ChooserActivity;
+
 import java.util.Locale;
 
 public class SplashActivity extends AppCompatActivity {
@@ -42,7 +44,7 @@ public class SplashActivity extends AppCompatActivity {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    Intent intent = new Intent(SplashActivity.this, CameraActivity.class);
+                    Intent intent = new Intent(SplashActivity.this, ChooserActivity.class);
                     startActivity(intent);
                     finish();
                 }
