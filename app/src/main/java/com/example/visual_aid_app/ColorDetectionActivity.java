@@ -17,6 +17,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.visual_aid_app.utils.ColorFinder;
+
 public class ColorDetectionActivity extends AppCompatActivity {
     private ImageView captureImageView;
     private TextView textview;

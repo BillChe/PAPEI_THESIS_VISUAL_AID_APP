@@ -2,8 +2,8 @@ package com.example.visual_aid_app;
 
 import static android.content.ContentValues.TAG;
 
-import static com.example.visual_aid_app.Util.checkHasCameraPermission;
-import static com.example.visual_aid_app.Util.checkHasWritgeExternalStoragePermission;
+import static com.example.visual_aid_app.utils.Util.checkHasCameraPermission;
+import static com.example.visual_aid_app.utils.Util.checkHasWritgeExternalStoragePermission;
 import static com.example.visual_aid_app.ZoomActivity.decodeStrem;
 import static com.example.visual_aid_app.ZoomActivity.rotateImage;
 
@@ -47,6 +47,8 @@ import android.widget.ZoomControls;
 
 
 import com.example.visual_aid_app.databinding.ActivityCameraBinding;
+import com.example.visual_aid_app.utils.ColorFinder;
+import com.example.visual_aid_app.utils.Util;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -856,9 +858,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     }
 
     private void showSettingsActivity() {
-        Intent captureIntent = new Intent(CameraActivity.this, ScannerActivity.class);
-        startActivity(captureIntent);
-        finish();
+
     }
 
     private void showHelpActivity() {

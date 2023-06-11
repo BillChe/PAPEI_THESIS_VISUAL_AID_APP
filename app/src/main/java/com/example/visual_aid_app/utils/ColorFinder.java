@@ -1,8 +1,9 @@
-package com.example.visual_aid_app;
+package com.example.visual_aid_app.utils;
 
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.AsyncTask;
+
+import com.example.visual_aid_app.Pixel;
 
 import java.util.HashMap;
 import java.util.Map;

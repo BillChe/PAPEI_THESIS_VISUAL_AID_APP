@@ -1,7 +1,7 @@
 package com.example.visual_aid_app;
 
-import static com.example.visual_aid_app.Util.checkHasCameraPermission;
-import static com.example.visual_aid_app.Util.checkHasWritgeExternalStoragePermission;
+import static com.example.visual_aid_app.utils.Util.checkHasCameraPermission;
+import static com.example.visual_aid_app.utils.Util.checkHasWritgeExternalStoragePermission;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,8 +14,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.widget.Toast;
-
-import com.example.visual_aid_app.R;
 
 import java.util.Locale;
 

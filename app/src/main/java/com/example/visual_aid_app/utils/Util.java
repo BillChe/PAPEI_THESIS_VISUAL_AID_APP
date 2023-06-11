@@ -1,4 +1,4 @@
-package com.example.visual_aid_app;
+package com.example.visual_aid_app.utils;
 
 import android.Manifest;
 import android.content.Context;

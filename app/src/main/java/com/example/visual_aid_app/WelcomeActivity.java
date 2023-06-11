@@ -1,7 +1,7 @@
 package com.example.visual_aid_app;
 
-import static com.example.visual_aid_app.Util.checkHasCameraPermission;
-import static com.example.visual_aid_app.Util.checkHasWritgeExternalStoragePermission;
+import static com.example.visual_aid_app.utils.Util.checkHasCameraPermission;
+import static com.example.visual_aid_app.utils.Util.checkHasWritgeExternalStoragePermission;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,9 +10,7 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
