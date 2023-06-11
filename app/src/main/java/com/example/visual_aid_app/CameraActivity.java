@@ -57,8 +57,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextBlock;
-import com.google.firebase.functions.FirebaseFunctions;
-import com.google.firebase.functions.HttpsCallableResult;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -111,7 +109,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     ActivityCameraBinding binding;
     Context context;
     List <Button> buttonFunctionsList;
-    private FirebaseFunctions mFunctions;
     private TextToSpeech textToSpeech;
     private int activeCamera = CAMERA_FACING_BACK;
     private EditText noteET;
@@ -502,77 +499,9 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     }
     private void quickTextDetection(Bitmap bitmap, boolean isDocument)
     {
-        Util.scaleBitmapDown(bitmap,640);
-        String convertedBitmapResult=Util.convertBitmap(bitmap);
 
-// ...
-        mFunctions = FirebaseFunctions.getInstance();
-        // Create json request to cloud vision
-        JsonObject request = new JsonObject();
-// Add image to request
-        JsonObject image = new JsonObject();
-        image.add("content", new JsonPrimitive(convertedBitmapResult));
-        request.add("image", image);
-//Add features to the request
-        JsonObject feature = new JsonObject();
-
-// Alternatively, for DOCUMENT_TEXT_DETECTION:
-        if(isDocument)
-        {
-            feature.add("type", new JsonPrimitive("DOCUMENT_TEXT_DETECTION"));
-        }
-        else
-        {
-            feature.add("type", new JsonPrimitive("TEXT_DETECTION"));
-        }
-
-        JsonArray features = new JsonArray();
-        features.add(feature);
-        request.add("features", features);
-        //provide language hints to assist with language detection
-        JsonObject imageContext = new JsonObject();
-        JsonArray languageHints = new JsonArray();
-        languageHints.add("en");
-        imageContext.add("languageHints", languageHints);
-        request.add("imageContext", imageContext);
-
-        annotateImage(request.toString())
-                .addOnCompleteListener(new OnCompleteListener<JsonElement>() {
-                    @Override
-                    public void onComplete(@NonNull Task<JsonElement> task) {
-                        if (!task.isSuccessful()) {
-                            // Task failed with an exception
-                            // ...
-                            quickCaptureText = "no text found";
-                            textview.setText(quickCaptureText);
-                            textToSpeech.speak(quickCaptureText.toString(), TextToSpeech.QUEUE_FLUSH, null);
-                        } else {
-                            // Task completed successfully
-                            // ...
-                            JsonObject annotation = task.getResult().getAsJsonArray().get(0).getAsJsonObject().get("fullTextAnnotation").getAsJsonObject();
-                            System.out.format("%nComplete annotation:%n");
-                            System.out.format("%s%n", annotation.get("text").getAsString());
-                            quickCaptureText = annotation.get("text").getAsString();
-                            textToSpeech.speak(quickCaptureText.toString(), TextToSpeech.QUEUE_FLUSH, null);
-                            textview.setText(quickCaptureText);
-                        }
-                    }
-                });
     }
-    private Task<JsonElement> annotateImage(String requestJson) {
-        return mFunctions
-                .getHttpsCallable("annotateImage")
-                .call(requestJson)
-                .continueWith(new Continuation<HttpsCallableResult, JsonElement>() {
-                    @Override
-                    public JsonElement then(@NonNull Task<HttpsCallableResult> task) {
-                        // This continuation runs on either success or failure, but if the task
-                        // has failed then getResult() will throw an Exception which will be
-                        // propagated down.
-                        return JsonParser.parseString(new Gson().toJson(task.getResult().getData()));
-                    }
-                });
-    }
+
     private void setViews() {
         //bottom buttons
         captureButton = (Button) findViewById(R.id.button_capture);

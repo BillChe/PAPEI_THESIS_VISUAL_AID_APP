@@ -21,8 +21,6 @@ import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
-import com.google.firebase.functions.FirebaseFunctions;
-import com.google.firebase.functions.HttpsCallableResult;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -40,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
     private TextToSpeech textToSpeech;
     private TextRecognizer textRecognizer;
     private final int cameraPermissionID = 101;
-    FirebaseFunctions mFunctions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        mFunctions = FirebaseFunctions.getInstance();
         startCamera();
     }
 
@@ -189,21 +185,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         }
-    }
-
-    private Task<JsonElement> annotateImage(String requestJson) {
-        return mFunctions
-                .getHttpsCallable("annotateImage")
-                .call(requestJson)
-                .continueWith(new Continuation<HttpsCallableResult, JsonElement>() {
-                    @Override
-                    public JsonElement then(@NonNull Task<HttpsCallableResult> task) {
-                        // This continuation runs on either success or failure, but if the task
-                        // has failed then getResult() will throw an Exception which will be
-                        // propagated down.
-                        return JsonParser.parseString(new Gson().toJson(task.getResult().getData()));
-                    }
-                });
     }
 
     public void createJSONRequest (String base64encoded)
