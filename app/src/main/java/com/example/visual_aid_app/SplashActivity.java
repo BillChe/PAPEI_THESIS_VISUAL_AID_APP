@@ -20,7 +20,7 @@ import com.example.visual_aid_app.activities.ChooserActivity;
 import java.util.Locale;
 
 public class SplashActivity extends AppCompatActivity {
-    private static final long SPLASH_SCREEN_DELAY = 500;
+    private static final long SPLASH_SCREEN_DELAY = 1000;
     TextToSpeech tts;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
