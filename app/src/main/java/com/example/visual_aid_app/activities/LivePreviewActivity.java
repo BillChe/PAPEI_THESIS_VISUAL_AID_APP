@@ -141,8 +141,7 @@ public final class LivePreviewActivity extends AppCompatActivity
     settingsButton.setOnClickListener(
         v -> {
           Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
-          intent.putExtra(
-              SettingsActivity.EXTRA_LAUNCH_SOURCE, SettingsActivity.LaunchSource.LIVE_PREVIEW);
+
           startActivity(intent);
         });
 

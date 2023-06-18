@@ -47,6 +47,7 @@ import android.widget.ZoomControls;
 
 
 import com.example.visual_aid_app.databinding.ActivityCameraBinding;
+import com.example.visual_aid_app.preference.SettingsActivity;
 import com.example.visual_aid_app.utils.ColorFinder;
 import com.example.visual_aid_app.utils.Util;
 import com.google.android.gms.tasks.Continuation;
@@ -787,7 +788,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     }
 
     private void showSettingsActivity() {
-
+        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
+        startActivity(intent);
     }
 
     private void showHelpActivity() {

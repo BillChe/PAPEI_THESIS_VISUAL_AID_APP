@@ -94,9 +94,7 @@ public final class CameraXSourceDemoActivity extends AppCompatActivity
     settingsButton.setOnClickListener(
         v -> {
           Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
-          intent.putExtra(
-              SettingsActivity.EXTRA_LAUNCH_SOURCE,
-              SettingsActivity.LaunchSource.CAMERAXSOURCE_DEMO);
+
           startActivity(intent);
         });
     detectionTaskCallback =
