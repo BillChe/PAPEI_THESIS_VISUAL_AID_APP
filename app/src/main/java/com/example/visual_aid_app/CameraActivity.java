@@ -8,9 +8,18 @@ import static com.example.visual_aid_app.ZoomActivity.decodeStrem;
 import static com.example.visual_aid_app.ZoomActivity.rotateImage;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.CameraInfoUnavailableException;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.Manifest;
 import android.app.Activity;
@@ -33,6 +42,7 @@ import android.os.Handler;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.util.Size;
 import android.util.SparseArray;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -46,8 +56,18 @@ import android.widget.Toast;
 import android.widget.ZoomControls;
 
 
+import com.example.visual_aid_app.camera_utils.GraphicOverlay;
+import com.example.visual_aid_app.camera_utils.VisionImageProcessor;
 import com.example.visual_aid_app.databinding.ActivityCameraBinding;
+import com.example.visual_aid_app.facedetector.FaceDetectorProcessor;
+import com.example.visual_aid_app.facemeshdetector.FaceMeshDetectorProcessor;
+import com.example.visual_aid_app.labeldetector.LabelDetectorProcessor;
+import com.example.visual_aid_app.objectdetector.ObjectDetectorProcessor;
+import com.example.visual_aid_app.posedetector.PoseDetectorProcessor;
+import com.example.visual_aid_app.preference.PreferenceUtils;
 import com.example.visual_aid_app.preference.SettingsActivity;
+import com.example.visual_aid_app.segmenter.SegmenterProcessor;
+import com.example.visual_aid_app.textdetector.TextRecognitionProcessor;
 import com.example.visual_aid_app.utils.ColorFinder;
 import com.example.visual_aid_app.utils.Util;
 import com.google.android.gms.tasks.Continuation;
@@ -64,15 +84,26 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.google.mlkit.common.MlKitException;
+import com.google.mlkit.common.model.LocalModel;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
 import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 import com.google.mlkit.vision.face.FaceLandmark;
+import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions;
+import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
+import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
+import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
+import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
+import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
+import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
+import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.io.File;
@@ -117,6 +148,42 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     ApplicationInfo applicationInfo;
 
     String applicationName = "";
+    //ML Kit staff
+    private static final String TAG = "CameraXLivePreview";
+
+    private static final String OBJECT_DETECTION = "Object Detection";
+    private static final String OBJECT_DETECTION_CUSTOM = "Custom Object Detection";
+    private static final String CUSTOM_AUTOML_OBJECT_DETECTION =
+            "Custom AutoML Object Detection (Flower)";
+    private static final String FACE_DETECTION = "Face Detection";
+    private static final String BARCODE_SCANNING = "Barcode Scanning";
+    private static final String IMAGE_LABELING = "Image Labeling";
+    private static final String IMAGE_LABELING_CUSTOM = "Custom Image Labeling (Birds)";
+    private static final String CUSTOM_AUTOML_LABELING = "Custom AutoML Image Labeling (Flower)";
+    private static final String POSE_DETECTION = "Pose Detection";
+    private static final String SELFIE_SEGMENTATION = "Selfie Segmentation";
+    private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
+    private static final String TEXT_RECOGNITION_CHINESE = "Text Recognition Chinese (Beta)";
+    private static final String TEXT_RECOGNITION_DEVANAGARI = "Text Recognition Devanagari (Beta)";
+    private static final String TEXT_RECOGNITION_JAPANESE = "Text Recognition Japanese (Beta)";
+    private static final String TEXT_RECOGNITION_KOREAN = "Text Recognition Korean (Beta)";
+    private static final String FACE_MESH_DETECTION = "Face Mesh Detection (Beta)";
+
+    private static final String STATE_SELECTED_MODEL = "selected_model";
+
+    private PreviewView previewView;
+    private GraphicOverlay graphicOverlay;
+
+    @Nullable
+    private ProcessCameraProvider cameraProvider;
+    @Nullable private Preview previewUseCase;
+    @Nullable private ImageAnalysis analysisUseCase;
+    @Nullable private VisionImageProcessor imageProcessor;
+    private boolean needUpdateGraphicOverlayImageSourceInfo;
+
+    private String selectedModel = OBJECT_DETECTION;
+    private int lensFacing = CameraSelector.LENS_FACING_BACK;
+    private CameraSelector cameraSelector;
 
 
     @Override
@@ -169,6 +236,22 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         {
             requestCameraPermission();
         }
+
+        //ML Kit staff initialiazation
+        if (savedInstanceState != null) {
+            selectedModel = savedInstanceState.getString(STATE_SELECTED_MODEL, OBJECT_DETECTION);
+        }
+        cameraSelector = new CameraSelector.Builder().requireLensFacing(lensFacing).build();
+
+        previewView = findViewById(R.id.preview_view);
+        if (previewView == null) {
+            Log.d(TAG, "previewView is null");
+        }
+        graphicOverlay = findViewById(R.id.graphic_overlay);
+        if (graphicOverlay == null) {
+            Log.d(TAG, "graphicOverlay is null");
+        }
+
 
     }
 
@@ -559,6 +642,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         textDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                showSurfaceView();
                 mViewModel.setZoomOn(false);
                 mViewModel.setFaceDetectOn(false);
                 mViewModel.setTextDetection(true);
@@ -571,6 +655,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         quickTextDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                showSurfaceView();
                 mViewModel.setZoomOn(false);
                 mViewModel.setFaceDetectOn(false);
                 mViewModel.setNoteOn(false);
@@ -584,6 +669,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         documentDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                showSurfaceView();
                 mViewModel.setZoomOn(false);
                 mViewModel.setFaceDetectOn(false);
                 mViewModel.setNoteOn(false);
@@ -595,6 +681,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         faceDetectionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                showSurfaceView();
                 mViewModel.setZoomOn(false);
                 mViewModel.setNoteOn(false);
                 mViewModel.setTextDetection(false);
@@ -609,51 +696,85 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         button_switch_camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                button_switch_camera.setSelected(true);
-                if(activeCamera == CAMERA_FACING_BACK)
+                if(mCameraView.getVisibility()==View.VISIBLE)
                 {
-                    activeCamera = CAMERA_FACING_FRONT;
-                }
-                else
-                {
-                    activeCamera = CAMERA_FACING_BACK;
-                }
-
-                Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-                int cameraCount = Camera.getNumberOfCameras();
-
-                for (int i = 0; i < cameraCount; i++) {
-                    Camera.getCameraInfo(i, cameraInfo);
-                    if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                        camera.release();
-                        camera = Camera.open(i);
-                        parameters = camera.getParameters();
-                        setCameraDisplayOrientation(CameraActivity.this,0,camera);
-                        parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
-
-                        List<Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
-
-
-                        Camera.Size sizePicture = (supportedSizes.get(0));
-                        Log.i("supportedsizes [%d]" , String.valueOf(supportedSizes.size()));
-
-                        parameters.setPictureSize(supportedSizes.get(0).width,supportedSizes.get(0).height);
-                        camera.setParameters(parameters);
-                        try {
-                            camera.setPreviewDisplay(mCameraView.getHolder());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        camera.startPreview();
-                        break;
+                    button_switch_camera.setSelected(true);
+                    if(activeCamera == CAMERA_FACING_BACK)
+                    {
+                        activeCamera = CAMERA_FACING_FRONT;
                     }
+                    else
+                    {
+                        activeCamera = CAMERA_FACING_BACK;
+                    }
+
+                    Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+                    int cameraCount = Camera.getNumberOfCameras();
+
+                    for (int i = 0; i < cameraCount; i++) {
+                        Camera.getCameraInfo(i, cameraInfo);
+                        if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                            camera.release();
+                            camera = Camera.open(i);
+                            parameters = camera.getParameters();
+                            setCameraDisplayOrientation(CameraActivity.this,0,camera);
+                            parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
+
+                            List<Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
+
+
+                            Camera.Size sizePicture = (supportedSizes.get(0));
+                            Log.i("supportedsizes [%d]" , String.valueOf(supportedSizes.size()));
+
+                            parameters.setPictureSize(supportedSizes.get(0).width,supportedSizes.get(0).height);
+                            camera.setParameters(parameters);
+                            try {
+                                camera.setPreviewDisplay(mCameraView.getHolder());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            camera.startPreview();
+                            break;
+                        }
+                    }
+
                 }
 
+                else
+            {
+                if (cameraProvider == null) {
+                    return;
+                }
+                int newLensFacing =
+                        lensFacing == CameraSelector.LENS_FACING_FRONT
+                                ? CameraSelector.LENS_FACING_BACK
+                                : CameraSelector.LENS_FACING_FRONT;
+                CameraSelector newCameraSelector =
+                        new CameraSelector.Builder().requireLensFacing(newLensFacing).build();
+                try {
+                    if (cameraProvider.hasCamera(newCameraSelector)) {
+                        Log.d(TAG, "Set facing to " + newLensFacing);
+                        lensFacing = newLensFacing;
+                        cameraSelector = newCameraSelector;
+                        bindAllCameraUseCases();
+                        return;
+                    }
+                } catch (CameraInfoUnavailableException e) {
+                    // Falls through
+                }
+                Toast.makeText(
+                                getApplicationContext(),
+                                "This device does not have lens with facing: " + newLensFacing,
+                                Toast.LENGTH_SHORT)
+                        .show();
             }
+            }
+
         });
         zoomBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                showSurfaceView();
                 activeCamera = CAMERA_FACING_BACK;
                 mViewModel.setTextDetection(false);
 
@@ -671,6 +792,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         blackwhite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //showSurfaceView();
                 if(!negativeCam)
                 {
                     negativeCam = true;
@@ -691,6 +813,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         colorRecognitionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                showSurfaceView();
                 activeCamera = CAMERA_FACING_BACK;
                 mViewModel.setFaceDetectOn(false);
                 mViewModel.setNoteOn(false);
@@ -706,6 +829,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         lightFunctionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                showSurfaceView();
                 lightFunctionBtn.setSelected(true);
                 deactivateOtherButtons(lightFunctionBtn.getTag().toString());
                 activeCamera = CAMERA_FACING_BACK;
@@ -720,6 +844,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         imageDescriptionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                hideSurfaceView();
                 imageDescriptionBtn.setSelected(true);
                 deactivateOtherButtons(imageDescriptionBtn.getTag().toString());
                 activeCamera = CAMERA_FACING_BACK;
@@ -728,6 +853,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 mViewModel.setZoomOn(false);
                 mViewModel.setNoteOn(false);
                 mViewModel.setFaceDetectOn(false);
+                startImageDescription();
 
             }
         });
@@ -787,6 +913,62 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         });
     }
 
+    private void startImageDescription() {
+
+        new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()))
+                .get(CameraXViewModel.class)
+                .getProcessCameraProvider()
+                .observe(
+                        this,
+                        provider -> {
+                            cameraProvider = provider;
+                            bindAllCameraUseCases();
+                        });
+    }
+
+    private void hideSurfaceView() {
+
+        camera.stopPreview();
+        /*camera.release();*/
+        mCameraView.setVisibility(View.GONE);
+        previewView.setVisibility(View.VISIBLE);
+        graphicOverlay.setVisibility(View.VISIBLE);
+    }
+    private void showSurfaceView() {
+
+        mCameraView.setVisibility(View.VISIBLE);
+        previewView.setVisibility(View.GONE);
+        graphicOverlay.setVisibility(View.GONE);
+    }
+
+    private void bindAllCameraUseCases() {
+        if (cameraProvider != null) {
+            // As required by CameraX API, unbinds all use cases before trying to re-bind any of them.
+            cameraProvider.unbindAll();
+            bindPreviewUseCase();
+            bindAnalysisUseCase();
+        }
+    }
+    private void bindPreviewUseCase() {
+        if (!PreferenceUtils.isCameraLiveViewportEnabled(this)) {
+            return;
+        }
+        if (cameraProvider == null) {
+            return;
+        }
+        if (previewUseCase != null) {
+            cameraProvider.unbind(previewUseCase);
+        }
+
+        Preview.Builder builder = new Preview.Builder();
+        Size targetResolution = PreferenceUtils.getCameraXTargetResolution(this, lensFacing);
+        if (targetResolution != null) {
+            builder.setTargetResolution(targetResolution);
+        }
+        previewUseCase = builder.build();
+        previewUseCase.setSurfaceProvider(previewView.getSurfaceProvider());
+        cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, previewUseCase);
+    }
     private void showSettingsActivity() {
         Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
         startActivity(intent);
@@ -1019,7 +1201,177 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             }
         });
     }
+    private void bindAnalysisUseCase() {
+        if (cameraProvider == null) {
+            return;
+        }
+        if (analysisUseCase != null) {
+            cameraProvider.unbind(analysisUseCase);
+        }
+        if (imageProcessor != null) {
+            imageProcessor.stop();
+        }
 
+        try {
+            switch (selectedModel) {
+                case OBJECT_DETECTION:
+                    Log.i(TAG, "Using Object Detector Processor");
+                    ObjectDetectorOptions objectDetectorOptions =
+                            PreferenceUtils.getObjectDetectorOptionsForLivePreview(this);
+                    imageProcessor = new ObjectDetectorProcessor(this, objectDetectorOptions);
+                    break;
+                case OBJECT_DETECTION_CUSTOM:
+                    Log.i(TAG, "Using Custom Object Detector Processor");
+                    LocalModel localModel =
+                            new LocalModel.Builder()
+                                    .setAssetFilePath("custom_models/object_labeler.tflite")
+                                    .build();
+                    CustomObjectDetectorOptions customObjectDetectorOptions =
+                            PreferenceUtils.getCustomObjectDetectorOptionsForLivePreview(this, localModel);
+                    imageProcessor = new ObjectDetectorProcessor(this, customObjectDetectorOptions);
+                    break;
+                case CUSTOM_AUTOML_OBJECT_DETECTION:
+                    Log.i(TAG, "Using Custom AutoML Object Detector Processor");
+                    LocalModel customAutoMLODTLocalModel =
+                            new LocalModel.Builder().setAssetManifestFilePath("automl/manifest.json").build();
+                    CustomObjectDetectorOptions customAutoMLODTOptions =
+                            PreferenceUtils.getCustomObjectDetectorOptionsForLivePreview(
+                                    this, customAutoMLODTLocalModel);
+                    imageProcessor = new ObjectDetectorProcessor(this, customAutoMLODTOptions);
+                    break;
+                case TEXT_RECOGNITION_CHINESE:
+                    Log.i(TAG, "Using on-device Text recognition Processor for Latin and Chinese.");
+                    imageProcessor =
+                            new TextRecognitionProcessor(
+                                    this, new ChineseTextRecognizerOptions.Builder().build());
+                    break;
+                case TEXT_RECOGNITION_DEVANAGARI:
+                    Log.i(TAG, "Using on-device Text recognition Processor for Latin and Devanagari.");
+                    imageProcessor =
+                            new TextRecognitionProcessor(
+                                    this, new DevanagariTextRecognizerOptions.Builder().build());
+                    break;
+                case TEXT_RECOGNITION_JAPANESE:
+                    Log.i(TAG, "Using on-device Text recognition Processor for Latin and Japanese.");
+                    imageProcessor =
+                            new TextRecognitionProcessor(
+                                    this, new JapaneseTextRecognizerOptions.Builder().build());
+                    break;
+                case TEXT_RECOGNITION_KOREAN:
+                    Log.i(TAG, "Using on-device Text recognition Processor for Latin and Korean.");
+                    imageProcessor =
+                            new TextRecognitionProcessor(this, new KoreanTextRecognizerOptions.Builder().build());
+                    break;
+                case TEXT_RECOGNITION_LATIN:
+                    Log.i(TAG, "Using on-device Text recognition Processor for Latin.");
+                    imageProcessor =
+                            new TextRecognitionProcessor(this, new TextRecognizerOptions.Builder().build());
+                    break;
+                case FACE_DETECTION:
+                    Log.i(TAG, "Using Face Detector Processor");
+                    imageProcessor = new FaceDetectorProcessor(this);
+                    break;
+    /*    case BARCODE_SCANNING:
+          Log.i(TAG, "Using Barcode Detector Processor");
+          imageProcessor = new BarcodeScannerProcessor(this);
+          break;*/
+                case IMAGE_LABELING:
+                    Log.i(TAG, "Using Image Label Detector Processor");
+                    imageProcessor = new LabelDetectorProcessor(this, ImageLabelerOptions.DEFAULT_OPTIONS);
+                    break;
+                case IMAGE_LABELING_CUSTOM:
+                    Log.i(TAG, "Using Custom Image Label (Birds) Detector Processor");
+                    LocalModel localClassifier =
+                            new LocalModel.Builder()
+                                    .setAssetFilePath("custom_models/bird_classifier.tflite")
+                                    .build();
+                    CustomImageLabelerOptions customImageLabelerOptions =
+                            new CustomImageLabelerOptions.Builder(localClassifier).build();
+                    imageProcessor = new LabelDetectorProcessor(this, customImageLabelerOptions);
+                    break;
+                case CUSTOM_AUTOML_LABELING:
+                    Log.i(TAG, "Using Custom AutoML Image Label Detector Processor");
+                    LocalModel customAutoMLLabelLocalModel =
+                            new LocalModel.Builder().setAssetManifestFilePath("automl/manifest.json").build();
+                    CustomImageLabelerOptions customAutoMLLabelOptions =
+                            new CustomImageLabelerOptions.Builder(customAutoMLLabelLocalModel)
+                                    .setConfidenceThreshold(0)
+                                    .build();
+                    imageProcessor = new LabelDetectorProcessor(this, customAutoMLLabelOptions);
+                    break;
+                case POSE_DETECTION:
+                    PoseDetectorOptionsBase poseDetectorOptions =
+                            PreferenceUtils.getPoseDetectorOptionsForLivePreview(this);
+                    boolean shouldShowInFrameLikelihood =
+                            PreferenceUtils.shouldShowPoseDetectionInFrameLikelihoodLivePreview(this);
+                    boolean visualizeZ = PreferenceUtils.shouldPoseDetectionVisualizeZ(this);
+                    boolean rescaleZ = PreferenceUtils.shouldPoseDetectionRescaleZForVisualization(this);
+                    boolean runClassification = PreferenceUtils.shouldPoseDetectionRunClassification(this);
+                    imageProcessor =
+                            new PoseDetectorProcessor(
+                                    this,
+                                    poseDetectorOptions,
+                                    shouldShowInFrameLikelihood,
+                                    visualizeZ,
+                                    rescaleZ,
+                                    runClassification,
+                                    /* isStreamMode = */ true);
+                    break;
+                case SELFIE_SEGMENTATION:
+                    imageProcessor = new SegmenterProcessor(this);
+                    break;
+                case FACE_MESH_DETECTION:
+                    imageProcessor = new FaceMeshDetectorProcessor(this);
+                    break;
+                default:
+                    throw new IllegalStateException("Invalid model name");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Can not create image processor: " + selectedModel, e);
+            Toast.makeText(
+                            getApplicationContext(),
+                            "Can not create image processor: " + e.getLocalizedMessage(),
+                            Toast.LENGTH_LONG)
+                    .show();
+            return;
+        }
+
+        ImageAnalysis.Builder builder = new ImageAnalysis.Builder();
+        Size targetResolution = PreferenceUtils.getCameraXTargetResolution(this, lensFacing);
+        if (targetResolution != null) {
+            builder.setTargetResolution(targetResolution);
+        }
+        analysisUseCase = builder.build();
+
+        needUpdateGraphicOverlayImageSourceInfo = true;
+        analysisUseCase.setAnalyzer(
+                // imageProcessor.processImageProxy will use another thread to run the detection underneath,
+                // thus we can just runs the analyzer itself on main thread.
+                ContextCompat.getMainExecutor(this),
+                imageProxy -> {
+                    if (needUpdateGraphicOverlayImageSourceInfo) {
+                        boolean isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT;
+                        int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+                        if (rotationDegrees == 0 || rotationDegrees == 180) {
+                            graphicOverlay.setImageSourceInfo(
+                                    imageProxy.getWidth(), imageProxy.getHeight(), isImageFlipped);
+                        } else {
+                            graphicOverlay.setImageSourceInfo(
+                                    imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
+                        }
+                        needUpdateGraphicOverlayImageSourceInfo = false;
+                    }
+                    try {
+                        imageProcessor.processImageProxy(imageProxy, graphicOverlay);
+                    } catch (MlKitException e) {
+                        Log.e(TAG, "Failed to process image. Error: " + e.getLocalizedMessage());
+                        Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT)
+                                .show();
+                    }
+                });
+
+        cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, analysisUseCase);
+    }
     @Override
     protected void onResume() {
         super.onResume();
