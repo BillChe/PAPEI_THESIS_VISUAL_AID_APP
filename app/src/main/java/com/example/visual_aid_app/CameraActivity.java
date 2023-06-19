@@ -698,8 +698,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             public void onClick(View view) {
          /*       mViewModel.setZoomOn(false);
                 mViewModel.setNoteOn(false);
-                mViewModel.setTextDetection(false);
-                faceDetectionBtn.setSelected(true);*/
+                mViewModel.setTextDetection(false);*/
+                faceDetectionBtn.setSelected(true);
                 selectedModel = FACE_DETECTION;
                 deactivateOtherButtons(faceDetectionBtn.getTag().toString());
                 negativeCam = false;

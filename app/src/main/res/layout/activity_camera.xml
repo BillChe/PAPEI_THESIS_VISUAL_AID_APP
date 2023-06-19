@@ -127,6 +127,7 @@ android:layout_height="match_parent"
 
     <androidx.camera.view.PreviewView
 
+        android:layout_marginTop="30dp"
         android:id="@+id/previewView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -145,7 +146,12 @@ android:layout_height="match_parent"
         app:layout_constraintLeft_toLeftOf="@id/previewView"
         app:layout_constraintRight_toRightOf="@id/previewView"
         app:layout_constraintTop_toTopOf="@id/previewView"
-        app:layout_constraintBottom_toBottomOf="@id/previewView"/>
+        app:layout_constraintBottom_toBottomOf="@id/previewView"
+        app:layout_constraintTop_toBottomOf="@id/topMenuButtonsLayout"
+        app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.0"
+        android:layout_marginTop="30dp"
+        />
     <ZoomControls
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"

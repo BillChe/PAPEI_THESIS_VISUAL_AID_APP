@@ -17,11 +17,16 @@
 package com.example.visual_aid_app.facedetector;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.PointF;
+import android.graphics.Rect;
+import android.media.MediaPlayer;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.example.visual_aid_app.CameraActivity;
 import com.example.visual_aid_app.activities.VisionProcessorBase;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.preference.PreferenceUtils;
@@ -33,6 +38,7 @@ import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 import com.google.mlkit.vision.face.FaceLandmark;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
@@ -42,12 +48,38 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
   private static final String TAG = "FaceDetectorProcessor";
 
   private final FaceDetector detector;
+  MediaPlayer player ;
+  Context context;
 
   public FaceDetectorProcessor(Context context) {
     super(context);
+     player = new MediaPlayer();
+    AssetFileDescriptor afd = null;
+    try {
+      afd = context.getAssets().openFd("supersonic.mp3");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    try {
+      player.setDataSource(afd.getFileDescriptor(),afd.getStartOffset(),afd.getLength());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    try {
+      player.prepare();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     FaceDetectorOptions faceDetectorOptions = PreferenceUtils.getFaceDetectorOptions(context);
+    FaceDetectorOptions highAccuracyOpts =
+            new FaceDetectorOptions.Builder()
+                    .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+                    .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
+                    .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
+                    .build();
     Log.v(MANUAL_TESTING_LOG, "Face detector options: " + faceDetectorOptions);
-    detector = FaceDetection.getClient(faceDetectorOptions);
+    detector = FaceDetection.getClient(highAccuracyOpts);
+    this.context = context;
   }
 
   @Override
@@ -66,6 +98,63 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
     for (Face face : faces) {
       graphicOverlay.add(new FaceGraphic(graphicOverlay, face));
       logExtrasForTesting(face);
+      Rect bounds = face.getBoundingBox();
+      float rotY = face.getHeadEulerAngleY();  // Head is rotated to the right rotY degrees
+      float rotZ = face.getHeadEulerAngleZ();  // Head is tilted sideways rotZ degrees
+
+      // If landmark detection was enabled (mouth, ears, eyes, cheeks, and
+      // nose available):
+      FaceLandmark leftEar = face.getLandmark(FaceLandmark.LEFT_EAR);
+      if (leftEar != null) {
+        PointF leftEarPos = leftEar.getPosition();
+      }
+
+      // If contour detection was enabled:
+                                     /*       List<PointF> leftEyeContour =
+                                                    face.getContour(FaceContour.LEFT_EYE).getPoints();
+                                            List<PointF> upperLipBottomContour =
+                                                    face.getContour(FaceContour.UPPER_LIP_BOTTOM).getPoints();*/
+      // If classification was enabled:
+      if (face.getSmilingProbability() != null) {
+        float smileProb = face.getSmilingProbability();
+
+        //todo vasilis add here optimization on this
+        if(smileProb > 0.50 && smileProb <= 0.80)
+        {
+          /*Toast.makeText(context,
+                  "face detected probably smiling?"+ smileProb,Toast.LENGTH_SHORT).show();*/
+        } else if (smileProb > 0.80) {
+
+         /* Toast.makeText(context,
+                  "face detected and SMILIIIING!"+ smileProb,Toast.LENGTH_SHORT).show();*/
+
+
+
+          if(player.isPlaying())
+          {
+            //stop or pause your media player mediaPlayer.stop(); or mediaPlayer.pause();
+            player.pause();
+          }
+          else
+          {
+            player.start();
+          }
+          //player.start();
+        }
+        else if(smileProb < 0.50)
+        {
+        /*  Toast.makeText(context,
+                  "face detected and why so serious???"+ smileProb,Toast.LENGTH_SHORT).show();*/
+        }
+      }
+      if (face.getRightEyeOpenProbability() != null) {
+        float rightEyeOpenProb = face.getRightEyeOpenProbability();
+      }
+
+      // If face tracking was enabled:
+      if (face.getTrackingId() != null) {
+        int id = face.getTrackingId();
+      }
     }
   }
 
