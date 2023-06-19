@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraInfoUnavailableException;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
@@ -33,7 +35,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
-import android.hardware.Camera;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -78,6 +79,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextBlock;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -114,11 +116,15 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import androidx.camera.core.Camera;
 
 public class CameraActivity extends AppCompatActivity {
     private CameraSource mCameraSource;
     private Camera camera;
+/*
     Camera.Parameters parameters;
+*/
 /*    private CameraPreview mPreview;*/
 private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     Button captureButton ;
@@ -181,20 +187,17 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     @Nullable private VisionImageProcessor imageProcessor;
     private boolean needUpdateGraphicOverlayImageSourceInfo;
 
-    private String selectedModel = OBJECT_DETECTION;
+    private String selectedModel = TEXT_RECOGNITION_LATIN;
     private int lensFacing = CameraSelector.LENS_FACING_BACK;
     private CameraSelector cameraSelector;
-
+    private ImageCapture imageCapture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_camera);
-        binding= DataBindingUtil.setContentView(this,R.layout.activity_camera);
+        setContentView(R.layout.activity_camera);
         //viewModel Setup
-        mViewModel = new CameraActivityViewModel(CameraActivity.this);
         context = CameraActivity.this;
-        binding.setViewModel(mViewModel);
         //get app info
         //package name to create folder of images and files
         PackageManager pm = getApplicationContext().getPackageManager();
@@ -221,29 +224,39 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         fillButtonList(buttonFunctionsList);
 
         //init of view model attrs
-        mViewModel.setSaveImageOn(true);
-        mViewModel.setNoteOn(false);
+        new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()))
+                .get(CameraXViewModel.class)
+                .getProcessCameraProvider()
+                .observe(
+                        this,
+                        provider -> {
+                            cameraProvider = provider;
+                            bindAllCameraUseCases();
+                        });
+
+      /*  mViewModel.setSaveImageOn(true);
+        mViewModel.setNoteOn(false);*/
         //init view with text detection
         textDetectBtn.setSelected(true);
-        mViewModel.setTextDetection(true);
+        /*mViewModel.setTextDetection(true);*/
         //camera init
         // Create an instance of Camera
         if (checkHasCameraPermission(CameraActivity.this)
                 && checkHasWritgeExternalStoragePermission(CameraActivity.this)) {
-            getCameraInstance();
+            //getCameraInstance();
         }
         else
         {
             requestCameraPermission();
         }
 
-        //ML Kit staff initialiazation
+        //ML Kit staff initialization
         if (savedInstanceState != null) {
             selectedModel = savedInstanceState.getString(STATE_SELECTED_MODEL, OBJECT_DETECTION);
         }
         cameraSelector = new CameraSelector.Builder().requireLensFacing(lensFacing).build();
 
-        previewView = findViewById(R.id.preview_view);
+        previewView = findViewById(R.id.previewView);
         if (previewView == null) {
             Log.d(TAG, "previewView is null");
         }
@@ -251,7 +264,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         if (graphicOverlay == null) {
             Log.d(TAG, "graphicOverlay is null");
         }
-
+        imageCapture = new ImageCapture.Builder().build();
 
     }
 
@@ -281,7 +294,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         }
     }
 
-    private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
+    /*private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
 
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -411,7 +424,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
 
         }
-    };
+    };*/
 
     private void detectColor(Bitmap imageBitmap) {
         new ColorFinder(new ColorFinder.CallbackInterface() {
@@ -521,66 +534,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                                     }
                                 });
     }
-    /**
-     * Init camera source with needed properties,
-     * then set camera view to surface view.
-     */
-    private void startCamera() {
 
-        textRecognizer = new com.google.android.gms.vision.text.TextRecognizer.Builder(getApplicationContext()).build();
-
-        if (textRecognizer.isOperational()) {
-
-            mCameraSource = new CameraSource.Builder(getApplicationContext(),textRecognizer)
-                    .setFacing(CameraSource.CAMERA_FACING_BACK)
-                    .setRequestedPreviewSize(1280, 720)
-                    .setAutoFocusEnabled(true)
-                    .setRequestedFps(2.0f)
-                    .build();
-
-            //If permission is granted cameraSource started and passed it to surfaceView
-            mCameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
-                @Override
-                public void surfaceCreated(SurfaceHolder holder) {
-                    if(checkHasCameraPermission(CameraActivity.this)){
-
-                        try {
-                            mCameraSource.start(mCameraView.getHolder());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                    else {
-
-                        Log.i("surfaceCreated","Permission request sent");
-                        requestCameraPermission();
-                    }
-                }
-
-                @Override
-                public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                }
-
-                @Override
-                public void surfaceDestroyed(SurfaceHolder holder) {
-                    mCameraSource.stop();
-                }
-            });
-            final Handler handler = new Handler();
-            final int delay = 1000;
-
-            handler.postDelayed(new Runnable() {
-                public void run() {
-                    detectText();
-                    handler.postDelayed(this, delay);
-
-                }
-            }, delay);
-
-
-        }
-    }
     private void quickTextDetection(Bitmap bitmap, boolean isDocument)
     {
 
@@ -616,13 +570,71 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         noteET = findViewById(R.id.noteET);
     }
 
+    private void takePhoto() {
+        File photoFile = getOutputDirectory();
+
+        ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(photoFile).build();
+
+        imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
+            @Override
+            public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                String msg = "Photo captured successfully: " + photoFile.getAbsolutePath();
+                Toast.makeText(CameraActivity.this, msg, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(@NonNull ImageCaptureException exception) {
+                Log.e("MainActivity", "Photo capture failed: " + exception.getMessage());
+            }
+        });
+    }
+
+    private File getOutputDirectory() {
+        final Calendar c = Calendar.getInstance();
+        String new_Date = c.get(Calendar.DAY_OF_MONTH) + "-"
+                + ((c.get(Calendar.MONTH)) + 1) + "-"
+                + c.get(Calendar.YEAR) + " " + c.get(Calendar.HOUR)
+                + "-" + c.get(Calendar.MINUTE) + "-"
+                + c.get(Calendar.SECOND);
+        File miDirs = new File(
+                getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
+                        +applicationName+ "/%s.jpg", "te1t(" + new_Date + ")");
+        if (!miDirs.exists())
+            miDirs.mkdirs();
+
+
+
+        imageFilePath = String.format(
+                getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
+                        +applicationName+ "/%s.jpg", "te1t(" + new_Date + ")");
+        File file = new File(imageFilePath);
+        return file;
+    }
+
     private void setListeners() {
+        flashBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(!flashOn)
+                {
+                    flashOn = true;
+                    flashBtn.setBackground(getDrawable(R.drawable.flash_on_icon));
+                }
+                else
+                {
+                    flashOn = false;
+                    flashBtn.setBackground(getDrawable(R.drawable.flashoff));
+                }
+                bindPreviewUseCase();
+            }
+        });
         captureButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         // get an image from the camera
-                        camera.takePicture(null, null, mPicture);
+                       // camera.takePicture(null, null, mPicture);
+                        takePhoto();
                     }
                 }
         );
@@ -642,12 +654,14 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         textDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showSurfaceView();
-                mViewModel.setZoomOn(false);
+
+               /* mViewModel.setZoomOn(false);
                 mViewModel.setFaceDetectOn(false);
-                mViewModel.setTextDetection(true);
+                mViewModel.setTextDetection(true);*/
                 textDetectBtn.setSelected(true);
+                selectedModel = TEXT_RECOGNITION_LATIN;
                 deactivateOtherButtons(textDetectBtn.getTag().toString());
+                bindAnalysisUseCase();
 
             }
         });
@@ -655,93 +669,50 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         quickTextDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showSurfaceView();
-                mViewModel.setZoomOn(false);
+             /*   mViewModel.setZoomOn(false);
                 mViewModel.setFaceDetectOn(false);
                 mViewModel.setNoteOn(false);
-                mViewModel.setTextDetection(true);
+                mViewModel.setTextDetection(true);*/
+                selectedModel = TEXT_RECOGNITION_LATIN;
                 quickTextDetectBtn.setSelected(true);
                 deactivateOtherButtons(quickTextDetectBtn.getTag().toString());
-                startCamera();
+                bindAnalysisUseCase();
 
             }
         });
         documentDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showSurfaceView();
-                mViewModel.setZoomOn(false);
+              /*  mViewModel.setZoomOn(false);
                 mViewModel.setFaceDetectOn(false);
                 mViewModel.setNoteOn(false);
-                mViewModel.setTextDetection(true);
+                mViewModel.setTextDetection(true);*/
+                selectedModel = TEXT_RECOGNITION_LATIN;
                 documentDetectBtn.setSelected(true);
                 deactivateOtherButtons(documentDetectBtn.getTag().toString());
+                bindAnalysisUseCase();
             }
         });
         faceDetectionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showSurfaceView();
-                mViewModel.setZoomOn(false);
+         /*       mViewModel.setZoomOn(false);
                 mViewModel.setNoteOn(false);
                 mViewModel.setTextDetection(false);
-                faceDetectionBtn.setSelected(true);
+                faceDetectionBtn.setSelected(true);*/
+                selectedModel = FACE_DETECTION;
                 deactivateOtherButtons(faceDetectionBtn.getTag().toString());
                 negativeCam = false;
                 textDetection = false;
-                mViewModel.setFaceDetectOn(true);
+                //mViewModel.setFaceDetectOn(true);
+                bindAnalysisUseCase();
             }
         });
 
         button_switch_camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(mCameraView.getVisibility()==View.VISIBLE)
-                {
-                    button_switch_camera.setSelected(true);
-                    if(activeCamera == CAMERA_FACING_BACK)
-                    {
-                        activeCamera = CAMERA_FACING_FRONT;
-                    }
-                    else
-                    {
-                        activeCamera = CAMERA_FACING_BACK;
-                    }
 
-                    Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-                    int cameraCount = Camera.getNumberOfCameras();
-
-                    for (int i = 0; i < cameraCount; i++) {
-                        Camera.getCameraInfo(i, cameraInfo);
-                        if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                            camera.release();
-                            camera = Camera.open(i);
-                            parameters = camera.getParameters();
-                            setCameraDisplayOrientation(CameraActivity.this,0,camera);
-                            parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
-
-                            List<Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
-
-
-                            Camera.Size sizePicture = (supportedSizes.get(0));
-                            Log.i("supportedsizes [%d]" , String.valueOf(supportedSizes.size()));
-
-                            parameters.setPictureSize(supportedSizes.get(0).width,supportedSizes.get(0).height);
-                            camera.setParameters(parameters);
-                            try {
-                                camera.setPreviewDisplay(mCameraView.getHolder());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            camera.startPreview();
-                            break;
-                        }
-                    }
-
-                }
-
-                else
-            {
                 if (cameraProvider == null) {
                     return;
                 }
@@ -759,6 +730,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                         bindAllCameraUseCases();
                         return;
                     }
+                    bindAnalysisUseCase();
                 } catch (CameraInfoUnavailableException e) {
                     // Falls through
                 }
@@ -768,25 +740,25 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                                 Toast.LENGTH_SHORT)
                         .show();
             }
-            }
+
 
         });
         zoomBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showSurfaceView();
                 activeCamera = CAMERA_FACING_BACK;
-                mViewModel.setTextDetection(false);
+               /* mViewModel.setTextDetection(false);*/
 
                 negativeCam = false;
                 textDetection = false;
-                mViewModel.setFaceDetectOn(false);
+            /*    mViewModel.setFaceDetectOn(false);
                 mViewModel.setNoteOn(false);
-                mViewModel.setZoomOn(true);
+                mViewModel.setZoomOn(true);*/
                 zoomBtn.setSelected(true);
                 zoomControls.setVisibility(View.VISIBLE);
                 blackwhite.setVisibility(View.VISIBLE);
                 deactivateOtherButtons(zoomBtn.getTag().toString());
+                bindAnalysisUseCase();
                }
         });
         blackwhite.setOnClickListener(new View.OnClickListener() {
@@ -796,16 +768,16 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 if(!negativeCam)
                 {
                     negativeCam = true;
-                    parameters = camera.getParameters();
+                  /*  parameters = camera.getParameters();
                     parameters.setColorEffect(Camera.Parameters.EFFECT_NEGATIVE);
-                    camera.setParameters(parameters);
+                    camera.setParameters(parameters);*/
                 }
                 else
                 {
                     negativeCam = false;
-                    parameters = camera.getParameters();
+                  /*  parameters = camera.getParameters();
                     parameters.setColorEffect(Camera.Parameters.EFFECT_NONE);
-                    camera.setParameters(parameters);
+                    camera.setParameters(parameters);*/
                 }
 
             }
@@ -813,30 +785,29 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         colorRecognitionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showSurfaceView();
                 activeCamera = CAMERA_FACING_BACK;
-                mViewModel.setFaceDetectOn(false);
+           /*     mViewModel.setFaceDetectOn(false);
                 mViewModel.setNoteOn(false);
                 mViewModel.setTextDetection(false);
-                mViewModel.setZoomOn(false);
+                mViewModel.setZoomOn(false);*/
                 negativeCam = false;
                 textDetection = false;
                 colorRecognitionBtn.setSelected(true);
                 deactivateOtherButtons(colorRecognitionBtn.getTag().toString());
+                bindAnalysisUseCase();
 
             }
         });
         lightFunctionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showSurfaceView();
                 lightFunctionBtn.setSelected(true);
                 deactivateOtherButtons(lightFunctionBtn.getTag().toString());
                 activeCamera = CAMERA_FACING_BACK;
-                mViewModel.setFaceDetectOn(false);
+             /*   mViewModel.setFaceDetectOn(false);
                 mViewModel.setNoteOn(false);
                 mViewModel.setTextDetection(false);
-                mViewModel.setZoomOn(false);
+                mViewModel.setZoomOn(false);*/
                 negativeCam = false;
                 textDetection = false;
             }
@@ -844,16 +815,16 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         imageDescriptionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                hideSurfaceView();
                 imageDescriptionBtn.setSelected(true);
                 deactivateOtherButtons(imageDescriptionBtn.getTag().toString());
                 activeCamera = CAMERA_FACING_BACK;
                 negativeCam = false;
                 textDetection = false;
-                mViewModel.setZoomOn(false);
+          /*      mViewModel.setZoomOn(false);
                 mViewModel.setNoteOn(false);
-                mViewModel.setFaceDetectOn(false);
+                mViewModel.setFaceDetectOn(false);*/
                 startImageDescription();
+                bindAnalysisUseCase();
 
             }
         });
@@ -862,7 +833,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             public void onClick(View view) {
                 settingsBtn.setSelected(true);
                 deactivateOtherButtons(settingsBtn.getTag().toString());
-                if (isPreviewing){
+          /*      if (isPreviewing){
                     camera.stopPreview();
                 }
                 activeCamera = CAMERA_FACING_BACK;
@@ -870,7 +841,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 mViewModel.setTextDetection(false);
                 mViewModel.setZoomOn(false);
                 negativeCam = false;
-                textDetection = false;
+                textDetection = false;*/
                 showSettingsActivity();
                 //getCameraInstance();
             }
@@ -881,14 +852,14 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 noteFunctionBtn.setSelected(true);
                 deactivateOtherButtons(noteFunctionBtn.getTag().toString());
                 activeCamera = CAMERA_FACING_BACK;
-                mViewModel.setFaceDetectOn(false);
+             /*   mViewModel.setFaceDetectOn(false);
                 mViewModel.setTextDetection(false);
                 mViewModel.setZoomOn(false);
                 negativeCam = false;
-                textDetection = false;
+                textDetection = false;*/
                 noteET.setVisibility(View.VISIBLE);
                 button_savenote.setEnabled(true);
-                mViewModel.setNoteOn(true);
+               /* mViewModel.setNoteOn(true);*/
 
             }
         });
@@ -915,38 +886,17 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
     private void startImageDescription() {
 
-        new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()))
-                .get(CameraXViewModel.class)
-                .getProcessCameraProvider()
-                .observe(
-                        this,
-                        provider -> {
-                            cameraProvider = provider;
-                            bindAllCameraUseCases();
-                        });
-    }
-
-    private void hideSurfaceView() {
-
-        camera.stopPreview();
-        /*camera.release();*/
-        mCameraView.setVisibility(View.GONE);
-        previewView.setVisibility(View.VISIBLE);
-        graphicOverlay.setVisibility(View.VISIBLE);
-    }
-    private void showSurfaceView() {
-
-        mCameraView.setVisibility(View.VISIBLE);
-        previewView.setVisibility(View.GONE);
-        graphicOverlay.setVisibility(View.GONE);
+        selectedModel = OBJECT_DETECTION_CUSTOM;
     }
 
     private void bindAllCameraUseCases() {
         if (cameraProvider != null) {
+
             // As required by CameraX API, unbinds all use cases before trying to re-bind any of them.
             cameraProvider.unbindAll();
             bindPreviewUseCase();
             bindAnalysisUseCase();
+
         }
     }
     private void bindPreviewUseCase() {
@@ -968,6 +918,21 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         previewUseCase = builder.build();
         previewUseCase.setSurfaceProvider(previewView.getSurfaceProvider());
         cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, previewUseCase);
+        Camera camera = cameraProvider.bindToLifecycle(this, cameraSelector, previewUseCase, imageCapture);
+        // Check if the camera has a flash unit
+        boolean hasFlash = camera.getCameraInfo().hasFlashUnit();
+
+        // Control flash if available and facing back
+        if (hasFlash) {
+
+            if (flashOn) {
+                // Enable flash
+                camera.getCameraControl().enableTorch(true);
+            } else {
+                // Disable flash
+                camera.getCameraControl().enableTorch(false);
+            }
+        }
     }
     private void showSettingsActivity() {
         Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
@@ -1059,148 +1024,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             }
         });
     }
-    /** A safe way to get an instance of the Camera object. */
-    public void getCameraInstance(){
-        //If permission is granted cameraSource started and passed it to surfaceView
-        mCameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                if (checkHasCameraPermission(CameraActivity.this)) {
-                    textRecognizer = new com.google.android.gms.vision.text.TextRecognizer.Builder(getApplicationContext()).build();
-                    camera = Camera.open(activeCamera);
-                    parameters = camera.getParameters();
-                    setCameraDisplayOrientation(CameraActivity.this,0,camera);
-                    parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
 
-                    List<Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
-
-                    Log.i("supportedsizes [%d]" , String.valueOf(supportedSizes.size()));
-                    Log.i("height [%d]" , String.valueOf(supportedSizes.get(0).height));
-                    Log.i("width [%d]" , String.valueOf(supportedSizes.get(0).width));
-                    Camera.Size sizePicture = (supportedSizes.get(0));
-
-                    parameters.setPictureSize(supportedSizes.get(0).width,supportedSizes.get(0).height);
-
-                } else {
-
-                    Log.i("surfaceCreated", "Permission request sent");
-                    requestCameraPermission();
-                }
-            }
-
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                if (isPreviewing){
-                    camera.stopPreview();
-                }
-                camera = Camera.open();
-                parameters = camera.getParameters();
-                setCameraDisplayOrientation(CameraActivity.this,0,camera);
-                parameters.setPreviewSize(camera.getParameters().getSupportedPreviewSizes().get(0).width, camera.getParameters().getSupportedPreviewSizes().get(0).height);
-
-
-                if (parameters.isZoomSupported() && parameters.isSmoothZoomSupported()) {
-                    //most phones
-                    maxZoomLevel = parameters.getMaxZoom();
-
-                    zoomControls.setIsZoomInEnabled(true);
-                    zoomControls.setIsZoomOutEnabled(true);
-
-                    zoomControls.setOnZoomInClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                            if (currentZoomLevel < maxZoomLevel) {
-                                currentZoomLevel++;
-                                camera.startSmoothZoom(currentZoomLevel);
-
-                            }
-                        }
-                    });
-
-                    zoomControls.setOnZoomOutClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                            if (currentZoomLevel > 0) {
-                                currentZoomLevel--;
-                                camera.startSmoothZoom(currentZoomLevel);
-                            }
-                        }
-                    });
-                } else if (parameters.isZoomSupported() && !parameters.isSmoothZoomSupported()){
-                    //no smooth zoom, set zoom
-                    maxZoomLevel = parameters.getMaxZoom();
-
-                    zoomControls.setIsZoomInEnabled(true);
-                    zoomControls.setIsZoomOutEnabled(true);
-
-                    zoomControls.setOnZoomInClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                            if (currentZoomLevel < maxZoomLevel) {
-                                currentZoomLevel++;
-                                parameters.setZoom(currentZoomLevel);
-                                camera.setParameters(parameters);
-
-                            }
-                        }
-                    });
-
-                    zoomControls.setOnZoomOutClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                            if (currentZoomLevel > 0) {
-                                currentZoomLevel--;
-                                parameters.setZoom(currentZoomLevel);
-                                camera.setParameters(parameters);
-                            }
-                        }
-                    });
-                }else{
-                    //no zoom on phone
-                    zoomControls.setVisibility(View.GONE);
-                }
-                flashBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        if(!flashOn)
-                        {
-                            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-                            flashOn = true;
-                            camera.setParameters(parameters);
-                            mViewModel.setFlashOn(false);
-                            flashBtn.setBackground(getDrawable(R.drawable.flash_on_icon));
-                        }
-                        else
-                        {
-                            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-                            flashOn = false;
-                            camera.setParameters(parameters);
-                            mViewModel.setFlashOn(true);
-                            flashBtn.setBackground(getDrawable(R.drawable.flashoff));
-
-                        }
-
-                    }
-                });
-
-
-                camera.setParameters(parameters);
-
-                try {
-                    camera.setPreviewDisplay(holder);
-                }
-                catch (IOException e) {
-                    Log.v(TAG, e.toString());
-                }
-
-                camera.startPreview(); // begin the preview
-                isPreviewing = true;
-            }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                if(camera!=null){
-                    camera.stopPreview();
-                }
-            }
-        });
-    }
     private void bindAnalysisUseCase() {
         if (cameraProvider == null) {
             return;
@@ -1213,6 +1037,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         }
 
         try {
+
             switch (selectedModel) {
                 case OBJECT_DETECTION:
                     Log.i(TAG, "Using Object Detector Processor");
@@ -1271,10 +1096,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                     Log.i(TAG, "Using Face Detector Processor");
                     imageProcessor = new FaceDetectorProcessor(this);
                     break;
-    /*    case BARCODE_SCANNING:
-          Log.i(TAG, "Using Barcode Detector Processor");
-          imageProcessor = new BarcodeScannerProcessor(this);
-          break;*/
+
                 case IMAGE_LABELING:
                     Log.i(TAG, "Using Image Label Detector Processor");
                     imageProcessor = new LabelDetectorProcessor(this, ImageLabelerOptions.DEFAULT_OPTIONS);
@@ -1315,7 +1137,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                                     visualizeZ,
                                     rescaleZ,
                                     runClassification,
-                                    /* isStreamMode = */ true);
+                                    /* isStreamMode = */  true);
                     break;
                 case SELFIE_SEGMENTATION:
                     imageProcessor = new SegmenterProcessor(this);
@@ -1371,13 +1193,28 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 });
 
         cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, analysisUseCase);
+
+
     }
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
-
+        bindAllCameraUseCases();
     }
-
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (imageProcessor != null) {
+            imageProcessor.stop();
+        }
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (imageProcessor != null) {
+            imageProcessor.stop();
+        }
+    }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -1385,7 +1222,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         {
             if(checkHasCameraPermission(CameraActivity.this) && checkHasWritgeExternalStoragePermission(CameraActivity.this))
             {
-               getCameraInstance();
+              // getCameraInstance();
 
             }
             else
@@ -1395,40 +1232,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             }
         }
 
-    }
-
-    private void setCameraDisplayOrientation(Activity activity, int cameraId,
-                                             android.hardware.Camera camera) {
-        android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
-        android.hardware.Camera.getCameraInfo(cameraId, info);
-        int rotation = activity.getWindowManager().getDefaultDisplay()
-                .getRotation();
-
-        int degrees = 0;
-        switch (rotation) {
-            case Surface.ROTATION_0:
-                degrees = 0;
-                break;
-            case Surface.ROTATION_90:
-                degrees = 90;
-                break;
-            case Surface.ROTATION_180:
-                degrees = 180;
-                break;
-            case Surface.ROTATION_270:
-                degrees = 270;
-                break;
-        }
-
-        int result = 0;
-
-        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-            result = (info.orientation + degrees) % 360;
-            result = (360 - result) % 360; // compensate the mirror
-        } else { // back-facing
-            result = (info.orientation - degrees + 360) % 360;
-        }
-        camera.setDisplayOrientation(result);
     }
 
     /**
