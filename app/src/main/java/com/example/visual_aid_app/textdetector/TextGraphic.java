@@ -23,8 +23,11 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
+import com.example.visual_aid_app.CameraActivity;
+import com.example.visual_aid_app.R;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.Text.Element;
@@ -56,6 +59,8 @@ public class TextGraphic extends GraphicOverlay.Graphic {
   private final boolean shouldGroupTextInBlocks;
   private final boolean showLanguageTag;
   private final boolean showConfidence;
+  private float confidenceMetric = 0.76f;
+  TextToSpeech tts;
 
   TextGraphic(
       GraphicOverlay overlay,
@@ -110,40 +115,53 @@ public class TextGraphic extends GraphicOverlay.Graphic {
             canvas);
       } else {
         for (Line line : textBlock.getLines()) {
-          Log.d(TAG, "Line text is: " + line.getText());
-          Log.d(TAG, "Line boundingbox is: " + line.getBoundingBox());
-          Log.d(TAG, "Line cornerpoint is: " + Arrays.toString(line.getCornerPoints()));
-          Log.d(TAG, "Line confidence is: " + line.getConfidence());
-          Log.d(TAG, "Line angle is: " + line.getAngle());
-          String text =
-              showLanguageTag
-                  ? String.format(
-                      TEXT_WITH_LANGUAGE_TAG_FORMAT, line.getRecognizedLanguage(), line.getText())
-                  : line.getText();
-          text =
-              showConfidence
-                  ? String.format(Locale.US, "%s (%.2f)", text, line.getConfidence())
-                  : text;
-          drawText(text, new RectF(line.getBoundingBox()), TEXT_SIZE + 2 * STROKE_WIDTH, canvas);
+          if(CameraActivity.quickText)
+          {
+            confidenceMetric = 0.70f;
+          }
+          if(line.getConfidence()>=confidenceMetric)
+          {
 
-          for (Element element : line.getElements()) {
-            Log.d(TAG, "Element text is: " + element.getText());
-            Log.d(TAG, "Element boundingbox is: " + element.getBoundingBox());
-            Log.d(TAG, "Element cornerpoint is: " + Arrays.toString(element.getCornerPoints()));
-            Log.d(TAG, "Element language is: " + element.getRecognizedLanguage());
-            Log.d(TAG, "Element confidence is: " + element.getConfidence());
-            Log.d(TAG, "Element angle is: " + element.getAngle());
-            for (Symbol symbol : element.getSymbols()) {
-              Log.d(TAG, "Symbol text is: " + symbol.getText());
-              Log.d(TAG, "Symbol boundingbox is: " + symbol.getBoundingBox());
-              Log.d(TAG, "Symbol cornerpoint is: " + Arrays.toString(symbol.getCornerPoints()));
-              Log.d(TAG, "Symbol confidence is: " + symbol.getConfidence());
-              Log.d(TAG, "Symbol angle is: " + symbol.getAngle());
+            //playTextDetectedMessage("");
+            Log.d(TAG, "Line text is: " + line.getText());
+            Log.d(TAG, "Line boundingbox is: " + line.getBoundingBox());
+            Log.d(TAG, "Line cornerpoint is: " + Arrays.toString(line.getCornerPoints()));
+            Log.d(TAG, "Line confidence is: " + line.getConfidence());
+            Log.d(TAG, "Line angle is: " + line.getAngle());
+            String text =
+                    showLanguageTag
+                            ? String.format(
+                            TEXT_WITH_LANGUAGE_TAG_FORMAT, line.getRecognizedLanguage(), line.getText())
+                            : line.getText();
+            text =
+                    showConfidence
+                            ? String.format(Locale.US, "%s (%.2f)", text, line.getConfidence())
+                            : text;
+            drawText(text, new RectF(line.getBoundingBox()), TEXT_SIZE + 2 * STROKE_WIDTH, canvas);
+            if(CameraActivity.quickText)
+            {
+             // playTextDetectedMessage(text);
+            }
+            for (Element element : line.getElements()) {
+              Log.d(TAG, "Element text is: " + element.getText());
+              Log.d(TAG, "Element boundingbox is: " + element.getBoundingBox());
+              Log.d(TAG, "Element cornerpoint is: " + Arrays.toString(element.getCornerPoints()));
+              Log.d(TAG, "Element language is: " + element.getRecognizedLanguage());
+              Log.d(TAG, "Element confidence is: " + element.getConfidence());
+              Log.d(TAG, "Element angle is: " + element.getAngle());
+              for (Symbol symbol : element.getSymbols()) {
+                Log.d(TAG, "Symbol text is: " + symbol.getText());
+                Log.d(TAG, "Symbol boundingbox is: " + symbol.getBoundingBox());
+                Log.d(TAG, "Symbol cornerpoint is: " + Arrays.toString(symbol.getCornerPoints()));
+                Log.d(TAG, "Symbol confidence is: " + symbol.getConfidence());
+                Log.d(TAG, "Symbol angle is: " + symbol.getAngle());
+              }
             }
           }
         }
       }
     }
+
   }
 
   private void drawText(String text, RectF rect, float textHeight, Canvas canvas) {
@@ -164,5 +182,29 @@ public class TextGraphic extends GraphicOverlay.Graphic {
         labelPaint);
     // Renders the text at the bottom of the box.
     canvas.drawText(text, rect.left, rect.top - STROKE_WIDTH, textPaint);
+  }
+
+  private void playTextDetectedMessage(String text) {
+    tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+      @Override
+      public void onInit(int i) {
+        if (i == TextToSpeech.SUCCESS) {
+          if(text!=null && text.length()>0)
+          {
+            tts.setLanguage(Locale.US);
+            tts.speak(getApplicationContext().getString(R.string.text_detected),
+                    TextToSpeech.QUEUE_ADD, null);
+          }
+          else
+          {
+            tts.setLanguage(Locale.US);
+            tts.speak(text,
+                    TextToSpeech.QUEUE_ADD, null);
+          }
+
+        }
+      }
+    });
+
   }
 }

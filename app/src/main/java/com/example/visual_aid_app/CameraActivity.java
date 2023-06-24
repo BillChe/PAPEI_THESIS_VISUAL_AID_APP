@@ -191,6 +191,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private int lensFacing = CameraSelector.LENS_FACING_BACK;
     private CameraSelector cameraSelector;
     private ImageCapture imageCapture;
+    public static boolean quickText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -641,12 +642,14 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         info.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                quickText = false;
                 Toast.makeText(CameraActivity.this,"Show info for selected function",Toast.LENGTH_SHORT).show();
             }
         });
         helpBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                quickText = false;
                 Toast.makeText(CameraActivity.this,"Show info for selected function",Toast.LENGTH_SHORT).show();
             }
         });
@@ -658,6 +661,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                /* mViewModel.setZoomOn(false);
                 mViewModel.setFaceDetectOn(false);
                 mViewModel.setTextDetection(true);*/
+                quickText = false;
                 textDetectBtn.setSelected(true);
                 selectedModel = TEXT_RECOGNITION_LATIN;
                 deactivateOtherButtons(textDetectBtn.getTag().toString());
@@ -673,6 +677,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 mViewModel.setFaceDetectOn(false);
                 mViewModel.setNoteOn(false);
                 mViewModel.setTextDetection(true);*/
+                quickText = true;
                 selectedModel = TEXT_RECOGNITION_LATIN;
                 quickTextDetectBtn.setSelected(true);
                 deactivateOtherButtons(quickTextDetectBtn.getTag().toString());
@@ -687,6 +692,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 mViewModel.setFaceDetectOn(false);
                 mViewModel.setNoteOn(false);
                 mViewModel.setTextDetection(true);*/
+                quickText = false;
                 selectedModel = TEXT_RECOGNITION_LATIN;
                 documentDetectBtn.setSelected(true);
                 deactivateOtherButtons(documentDetectBtn.getTag().toString());
@@ -699,6 +705,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
          /*       mViewModel.setZoomOn(false);
                 mViewModel.setNoteOn(false);
                 mViewModel.setTextDetection(false);*/
+                quickText = false;
                 faceDetectionBtn.setSelected(true);
                 selectedModel = FACE_DETECTION;
                 deactivateOtherButtons(faceDetectionBtn.getTag().toString());
@@ -790,6 +797,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 mViewModel.setNoteOn(false);
                 mViewModel.setTextDetection(false);
                 mViewModel.setZoomOn(false);*/
+                quickText = false;
                 negativeCam = false;
                 textDetection = false;
                 colorRecognitionBtn.setSelected(true);
@@ -808,6 +816,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 mViewModel.setNoteOn(false);
                 mViewModel.setTextDetection(false);
                 mViewModel.setZoomOn(false);*/
+                quickText = false;
                 negativeCam = false;
                 textDetection = false;
             }
@@ -820,6 +829,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 activeCamera = CAMERA_FACING_BACK;
                 negativeCam = false;
                 textDetection = false;
+                quickText = false;
           /*      mViewModel.setZoomOn(false);
                 mViewModel.setNoteOn(false);
                 mViewModel.setFaceDetectOn(false);*/
@@ -831,7 +841,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         settingsBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                settingsBtn.setSelected(true);
+                //settingsBtn.setSelected(true);
                 deactivateOtherButtons(settingsBtn.getTag().toString());
           /*      if (isPreviewing){
                     camera.stopPreview();
@@ -842,6 +852,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 mViewModel.setZoomOn(false);
                 negativeCam = false;
                 textDetection = false;*/
+                quickText = false;
                 showSettingsActivity();
                 //getCameraInstance();
             }
@@ -859,6 +870,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 textDetection = false;*/
                 noteET.setVisibility(View.VISIBLE);
                 button_savenote.setEnabled(true);
+                quickText = false;
                /* mViewModel.setNoteOn(true);*/
 
             }
