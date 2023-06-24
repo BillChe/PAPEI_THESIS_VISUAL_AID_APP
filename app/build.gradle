@@ -101,10 +101,10 @@ dependencies {
     // use unbundled model that depends on Google Play Services
     // implementation 'com.google.android.gms:play-services-mlkit-text-recognition:18.0.2'
 
-    implementation 'com.google.mlkit:text-recognition-chinese:16.0.0-beta6'
-    implementation 'com.google.mlkit:text-recognition-devanagari:16.0.0-beta6'
-    implementation 'com.google.mlkit:text-recognition-japanese:16.0.0-beta6'
-    implementation 'com.google.mlkit:text-recognition-korean:16.0.0-beta6'
+//    implementation 'com.google.mlkit:text-recognition-chinese:16.0.0-beta6'
+//    implementation 'com.google.mlkit:text-recognition-devanagari:16.0.0-beta6'
+//    implementation 'com.google.mlkit:text-recognition-japanese:16.0.0-beta6'
+//    implementation 'com.google.mlkit:text-recognition-korean:16.0.0-beta6'
 
     // Image labeling
     implementation 'com.google.mlkit:image-labeling:17.0.7'
@@ -129,7 +129,7 @@ dependencies {
     implementation 'com.google.mlkit:camera:16.0.0-beta3'
 
     // Face Mesh Detection
-    implementation 'com.google.mlkit:face-mesh-detection:16.0.0-beta1'
+    //implementation 'com.google.mlkit:face-mesh-detection:16.0.0-beta1'
 
     // -------------------------------------------------------
 

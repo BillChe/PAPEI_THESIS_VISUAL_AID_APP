@@ -61,7 +61,6 @@ import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.camera_utils.VisionImageProcessor;
 import com.example.visual_aid_app.databinding.ActivityCameraBinding;
 import com.example.visual_aid_app.facedetector.FaceDetectorProcessor;
-import com.example.visual_aid_app.facemeshdetector.FaceMeshDetectorProcessor;
 import com.example.visual_aid_app.labeldetector.LabelDetectorProcessor;
 import com.example.visual_aid_app.objectdetector.ObjectDetectorProcessor;
 import com.example.visual_aid_app.posedetector.PoseDetectorProcessor;
@@ -102,10 +101,6 @@ import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
-import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
-import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
-import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
-import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.io.File;
@@ -169,11 +164,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private static final String POSE_DETECTION = "Pose Detection";
     private static final String SELFIE_SEGMENTATION = "Selfie Segmentation";
     private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
-    private static final String TEXT_RECOGNITION_CHINESE = "Text Recognition Chinese (Beta)";
-    private static final String TEXT_RECOGNITION_DEVANAGARI = "Text Recognition Devanagari (Beta)";
-    private static final String TEXT_RECOGNITION_JAPANESE = "Text Recognition Japanese (Beta)";
-    private static final String TEXT_RECOGNITION_KOREAN = "Text Recognition Korean (Beta)";
-    private static final String FACE_MESH_DETECTION = "Face Mesh Detection (Beta)";
 
     private static final String STATE_SELECTED_MODEL = "selected_model";
 
@@ -1091,29 +1081,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                                     this, customAutoMLODTLocalModel);
                     imageProcessor = new ObjectDetectorProcessor(this, customAutoMLODTOptions);
                     break;
-                case TEXT_RECOGNITION_CHINESE:
-                    Log.i(TAG, "Using on-device Text recognition Processor for Latin and Chinese.");
-                    imageProcessor =
-                            new TextRecognitionProcessor(
-                                    this, new ChineseTextRecognizerOptions.Builder().build());
-                    break;
-                case TEXT_RECOGNITION_DEVANAGARI:
-                    Log.i(TAG, "Using on-device Text recognition Processor for Latin and Devanagari.");
-                    imageProcessor =
-                            new TextRecognitionProcessor(
-                                    this, new DevanagariTextRecognizerOptions.Builder().build());
-                    break;
-                case TEXT_RECOGNITION_JAPANESE:
-                    Log.i(TAG, "Using on-device Text recognition Processor for Latin and Japanese.");
-                    imageProcessor =
-                            new TextRecognitionProcessor(
-                                    this, new JapaneseTextRecognizerOptions.Builder().build());
-                    break;
-                case TEXT_RECOGNITION_KOREAN:
-                    Log.i(TAG, "Using on-device Text recognition Processor for Latin and Korean.");
-                    imageProcessor =
-                            new TextRecognitionProcessor(this, new KoreanTextRecognizerOptions.Builder().build());
-                    break;
                 case TEXT_RECOGNITION_LATIN:
                     Log.i(TAG, "Using on-device Text recognition Processor for Latin.");
                     imageProcessor =
@@ -1169,9 +1136,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 case SELFIE_SEGMENTATION:
                     imageProcessor = new SegmenterProcessor(this);
                     break;
-                case FACE_MESH_DETECTION:
-                    imageProcessor = new FaceMeshDetectorProcessor(this);
-                    break;
+
                 default:
                     throw new IllegalStateException("Invalid model name");
             }

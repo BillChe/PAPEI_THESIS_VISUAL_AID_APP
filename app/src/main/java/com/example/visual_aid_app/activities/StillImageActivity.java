@@ -45,7 +45,6 @@ import com.example.visual_aid_app.camera_utils.BitmapUtils;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.camera_utils.VisionImageProcessor;
 import com.example.visual_aid_app.facedetector.FaceDetectorProcessor;
-import com.example.visual_aid_app.facemeshdetector.FaceMeshDetectorProcessor;
 import com.example.visual_aid_app.labeldetector.LabelDetectorProcessor;
 import com.example.visual_aid_app.objectdetector.ObjectDetectorProcessor;
 import com.example.visual_aid_app.posedetector.PoseDetectorProcessor;
@@ -61,10 +60,6 @@ import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
 import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
-import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
-import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
-import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
-import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.io.IOException;
@@ -438,46 +433,12 @@ public final class StillImageActivity extends AppCompatActivity {
           Log.i(TAG, "Using Face Detector Processor");
           imageProcessor = new FaceDetectorProcessor(this);
           break;
-      /*  case BARCODE_SCANNING:
-          imageProcessor = new BarcodeScannerProcessor(this);
-          break;*/
         case TEXT_RECOGNITION_LATIN:
           if (imageProcessor != null) {
             imageProcessor.stop();
           }
           imageProcessor =
               new TextRecognitionProcessor(this, new TextRecognizerOptions.Builder().build());
-          break;
-        case TEXT_RECOGNITION_CHINESE:
-          if (imageProcessor != null) {
-            imageProcessor.stop();
-          }
-          imageProcessor =
-              new TextRecognitionProcessor(
-                  this, new ChineseTextRecognizerOptions.Builder().build());
-          break;
-        case TEXT_RECOGNITION_DEVANAGARI:
-          if (imageProcessor != null) {
-            imageProcessor.stop();
-          }
-          imageProcessor =
-              new TextRecognitionProcessor(
-                  this, new DevanagariTextRecognizerOptions.Builder().build());
-          break;
-        case TEXT_RECOGNITION_JAPANESE:
-          if (imageProcessor != null) {
-            imageProcessor.stop();
-          }
-          imageProcessor =
-              new TextRecognitionProcessor(
-                  this, new JapaneseTextRecognizerOptions.Builder().build());
-          break;
-        case TEXT_RECOGNITION_KOREAN:
-          if (imageProcessor != null) {
-            imageProcessor.stop();
-          }
-          imageProcessor =
-              new TextRecognitionProcessor(this, new KoreanTextRecognizerOptions.Builder().build());
           break;
         case IMAGE_LABELING:
           imageProcessor = new LabelDetectorProcessor(this, ImageLabelerOptions.DEFAULT_OPTIONS);
@@ -523,9 +484,6 @@ public final class StillImageActivity extends AppCompatActivity {
           break;
         case SELFIE_SEGMENTATION:
           imageProcessor = new SegmenterProcessor(this, /* isStreamMode= */ false);
-          break;
-        case FACE_MESH_DETECTION:
-          imageProcessor = new FaceMeshDetectorProcessor(this);
           break;
         default:
           Log.e(TAG, "Unknown selectedMode: " + selectedMode);

@@ -50,7 +50,6 @@ import com.example.visual_aid_app.R;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.camera_utils.VisionImageProcessor;
 import com.example.visual_aid_app.facedetector.FaceDetectorProcessor;
-import com.example.visual_aid_app.facemeshdetector.FaceMeshDetectorProcessor;
 import com.example.visual_aid_app.labeldetector.LabelDetectorProcessor;
 import com.example.visual_aid_app.objectdetector.ObjectDetectorProcessor;
 import com.example.visual_aid_app.posedetector.PoseDetectorProcessor;
@@ -66,10 +65,6 @@ import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
 import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
-import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
-import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
-import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
-import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.util.ArrayList;
@@ -150,10 +145,6 @@ public final class CameraXLivePreviewActivity extends AppCompatActivity
     options.add(POSE_DETECTION);
     options.add(SELFIE_SEGMENTATION);
     options.add(TEXT_RECOGNITION_LATIN);
-    options.add(TEXT_RECOGNITION_CHINESE);
-    options.add(TEXT_RECOGNITION_DEVANAGARI);
-    options.add(TEXT_RECOGNITION_JAPANESE);
-    options.add(TEXT_RECOGNITION_KOREAN);
     options.add(FACE_MESH_DETECTION);
 
     // Creating adapter for spinner
@@ -324,29 +315,6 @@ public final class CameraXLivePreviewActivity extends AppCompatActivity
                   this, customAutoMLODTLocalModel);
           imageProcessor = new ObjectDetectorProcessor(this, customAutoMLODTOptions);
           break;
-        case TEXT_RECOGNITION_CHINESE:
-          Log.i(TAG, "Using on-device Text recognition Processor for Latin and Chinese.");
-          imageProcessor =
-              new TextRecognitionProcessor(
-                  this, new ChineseTextRecognizerOptions.Builder().build());
-          break;
-        case TEXT_RECOGNITION_DEVANAGARI:
-          Log.i(TAG, "Using on-device Text recognition Processor for Latin and Devanagari.");
-          imageProcessor =
-              new TextRecognitionProcessor(
-                  this, new DevanagariTextRecognizerOptions.Builder().build());
-          break;
-        case TEXT_RECOGNITION_JAPANESE:
-          Log.i(TAG, "Using on-device Text recognition Processor for Latin and Japanese.");
-          imageProcessor =
-              new TextRecognitionProcessor(
-                  this, new JapaneseTextRecognizerOptions.Builder().build());
-          break;
-        case TEXT_RECOGNITION_KOREAN:
-          Log.i(TAG, "Using on-device Text recognition Processor for Latin and Korean.");
-          imageProcessor =
-              new TextRecognitionProcessor(this, new KoreanTextRecognizerOptions.Builder().build());
-          break;
         case TEXT_RECOGNITION_LATIN:
           Log.i(TAG, "Using on-device Text recognition Processor for Latin.");
           imageProcessor =
@@ -356,10 +324,6 @@ public final class CameraXLivePreviewActivity extends AppCompatActivity
           Log.i(TAG, "Using Face Detector Processor");
           imageProcessor = new FaceDetectorProcessor(this);
           break;
-    /*    case BARCODE_SCANNING:
-          Log.i(TAG, "Using Barcode Detector Processor");
-          imageProcessor = new BarcodeScannerProcessor(this);
-          break;*/
         case IMAGE_LABELING:
           Log.i(TAG, "Using Image Label Detector Processor");
           imageProcessor = new LabelDetectorProcessor(this, ImageLabelerOptions.DEFAULT_OPTIONS);
@@ -405,9 +369,7 @@ public final class CameraXLivePreviewActivity extends AppCompatActivity
         case SELFIE_SEGMENTATION:
           imageProcessor = new SegmenterProcessor(this);
           break;
-        case FACE_MESH_DETECTION:
-          imageProcessor = new FaceMeshDetectorProcessor(this);
-          break;
+
         default:
           throw new IllegalStateException("Invalid model name");
       }

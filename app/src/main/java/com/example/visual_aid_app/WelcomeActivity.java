@@ -69,7 +69,7 @@ public class WelcomeActivity extends AppCompatActivity {
         textDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent captureIntent = new Intent(WelcomeActivity.this, CameraView.class);
+                Intent captureIntent = new Intent(WelcomeActivity.this, MainActivity.class);
                 startActivity(captureIntent);
             }
         });

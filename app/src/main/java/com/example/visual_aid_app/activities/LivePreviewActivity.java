@@ -36,7 +36,6 @@ import com.example.visual_aid_app.CameraSourcePreview;
 import com.example.visual_aid_app.R;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.facedetector.FaceDetectorProcessor;
-import com.example.visual_aid_app.facemeshdetector.FaceMeshDetectorProcessor;
 import com.example.visual_aid_app.labeldetector.LabelDetectorProcessor;
 import com.example.visual_aid_app.objectdetector.ObjectDetectorProcessor;
 import com.example.visual_aid_app.posedetector.PoseDetectorProcessor;
@@ -52,10 +51,6 @@ import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
 import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
-import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
-import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
-import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
-import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.io.IOException;
@@ -82,7 +77,6 @@ public final class LivePreviewActivity extends AppCompatActivity
   private static final String TEXT_RECOGNITION_DEVANAGARI = "Text Recognition Devanagari (Beta)";
   private static final String TEXT_RECOGNITION_JAPANESE = "Text Recognition Japanese (Beta)";
   private static final String TEXT_RECOGNITION_KOREAN = "Text Recognition Korean (Beta)";
-  private static final String FACE_MESH_DETECTION = "Face Mesh Detection (Beta)";
 
   private static final String TAG = "LivePreviewActivity";
 
@@ -120,11 +114,7 @@ public final class LivePreviewActivity extends AppCompatActivity
     options.add(POSE_DETECTION);
     options.add(SELFIE_SEGMENTATION);
     options.add(TEXT_RECOGNITION_LATIN);
-    options.add(TEXT_RECOGNITION_CHINESE);
-    options.add(TEXT_RECOGNITION_DEVANAGARI);
-    options.add(TEXT_RECOGNITION_JAPANESE);
-    options.add(TEXT_RECOGNITION_KOREAN);
-    options.add(FACE_MESH_DETECTION);
+
 
     // Creating adapter for spinner
     ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, R.layout.spinner_style, options);
@@ -219,38 +209,10 @@ public final class LivePreviewActivity extends AppCompatActivity
           cameraSource.setMachineLearningFrameProcessor(
               new TextRecognitionProcessor(this, new TextRecognizerOptions.Builder().build()));
           break;
-        case TEXT_RECOGNITION_CHINESE:
-          Log.i(TAG, "Using on-device Text recognition Processor for Latin and Chinese.");
-          cameraSource.setMachineLearningFrameProcessor(
-              new TextRecognitionProcessor(
-                  this, new ChineseTextRecognizerOptions.Builder().build()));
-          break;
-        case TEXT_RECOGNITION_DEVANAGARI:
-          Log.i(TAG, "Using on-device Text recognition Processor for Latin and Devanagari.");
-          cameraSource.setMachineLearningFrameProcessor(
-              new TextRecognitionProcessor(
-                  this, new DevanagariTextRecognizerOptions.Builder().build()));
-          break;
-        case TEXT_RECOGNITION_JAPANESE:
-          Log.i(TAG, "Using on-device Text recognition Processor for Latin and Japanese.");
-          cameraSource.setMachineLearningFrameProcessor(
-              new TextRecognitionProcessor(
-                  this, new JapaneseTextRecognizerOptions.Builder().build()));
-          break;
-        case TEXT_RECOGNITION_KOREAN:
-          Log.i(TAG, "Using on-device Text recognition Processor for Latin and Korean.");
-          cameraSource.setMachineLearningFrameProcessor(
-              new TextRecognitionProcessor(
-                  this, new KoreanTextRecognizerOptions.Builder().build()));
-          break;
         case FACE_DETECTION:
           Log.i(TAG, "Using Face Detector Processor");
           cameraSource.setMachineLearningFrameProcessor(new FaceDetectorProcessor(this));
           break;
-    /*    case BARCODE_SCANNING:
-          Log.i(TAG, "Using Barcode Detector Processor");
-          cameraSource.setMachineLearningFrameProcessor(new BarcodeScannerProcessor(this));
-          break;*/
         case IMAGE_LABELING:
           Log.i(TAG, "Using Image Label Detector Processor");
           cameraSource.setMachineLearningFrameProcessor(
@@ -299,9 +261,6 @@ public final class LivePreviewActivity extends AppCompatActivity
           break;
         case SELFIE_SEGMENTATION:
           cameraSource.setMachineLearningFrameProcessor(new SegmenterProcessor(this));
-          break;
-        case FACE_MESH_DETECTION:
-          cameraSource.setMachineLearningFrameProcessor(new FaceMeshDetectorProcessor(this));
           break;
         default:
           Log.e(TAG, "Unknown model: " + model);
