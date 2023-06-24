@@ -334,7 +334,8 @@ public final class StillImageActivity extends AppCompatActivity {
         return;
       }
 
-      Bitmap imageBitmap = BitmapUtils.getBitmapFromContentUri(getContentResolver(), imageUri);
+      Bitmap imageBitmap = BitmapUtils.getBitmapFromContentUri
+              (getContentResolver(), imageUri);
       if (imageBitmap == null) {
         return;
       }

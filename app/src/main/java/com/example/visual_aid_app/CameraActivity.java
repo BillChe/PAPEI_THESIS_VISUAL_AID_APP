@@ -192,6 +192,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private CameraSelector cameraSelector;
     private ImageCapture imageCapture;
     public static boolean quickText;
+    Bitmap savedImageBitmap;
+    String new_Date = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -253,7 +255,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
         //ML Kit staff initialization
         if (savedInstanceState != null) {
-            selectedModel = savedInstanceState.getString(STATE_SELECTED_MODEL, OBJECT_DETECTION);
+            //selectedModel = savedInstanceState.getString(STATE_SELECTED_MODEL, OBJECT_DETECTION);
         }
         cameraSelector = new CameraSelector.Builder().requireLensFacing(lensFacing).build();
 
@@ -576,11 +578,23 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
         ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(photoFile).build();
 
-        imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
+        imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this),
+                new ImageCapture.OnImageSavedCallback() {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 String msg = "Photo captured successfully: " + photoFile.getAbsolutePath();
-                Toast.makeText(CameraActivity.this, msg, Toast.LENGTH_SHORT).show();
+               // Toast.makeText(CameraActivity.this, msg, Toast.LENGTH_SHORT).show();
+                savedImageBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+                if (savedImageBitmap != null) {
+                    MediaStore.Images.Media.insertImage(getContentResolver(), savedImageBitmap,
+                            photoFile.getPath(),
+                            "image:" + new_Date);
+                    Toast.makeText(CameraActivity.this,
+                                    msg, Toast.LENGTH_LONG)
+                            .show();
+                    showImageViewPreview.setImageBitmap(savedImageBitmap);
+
+                }
             }
 
             @Override
@@ -592,7 +606,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
     private File getOutputDirectory() {
         final Calendar c = Calendar.getInstance();
-        String new_Date = c.get(Calendar.DAY_OF_MONTH) + "-"
+        new_Date = c.get(Calendar.DAY_OF_MONTH) + "-"
                 + ((c.get(Calendar.MONTH)) + 1) + "-"
                 + c.get(Calendar.YEAR) + " " + c.get(Calendar.HOUR)
                 + "-" + c.get(Calendar.MINUTE) + "-"
@@ -842,7 +856,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             @Override
             public void onClick(View view) {
                 //settingsBtn.setSelected(true);
-                deactivateOtherButtons(settingsBtn.getTag().toString());
+                //deactivateOtherButtons(settingsBtn.getTag().toString());
           /*      if (isPreviewing){
                     camera.stopPreview();
                 }
@@ -852,7 +866,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 mViewModel.setZoomOn(false);
                 negativeCam = false;
                 textDetection = false;*/
-                quickText = false;
+                //quickText = false;
                 showSettingsActivity();
                 //getCameraInstance();
             }
@@ -949,6 +963,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private void showSettingsActivity() {
         Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
         startActivity(intent);
+
     }
 
     private void showHelpActivity() {
