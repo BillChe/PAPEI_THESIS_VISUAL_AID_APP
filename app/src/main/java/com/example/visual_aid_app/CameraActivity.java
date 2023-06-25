@@ -134,7 +134,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn, textDetection, negativeCam;
     private Button zoomBtn, textDetectBtn,
             quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
-            colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,settingsBtn,helpBtn,
+            colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,settingsBtn,
             button_switch_camera, button_savenote;
     private ImageView flashBtn, info, blackwhite;
     ImageView showImageView,showImageViewPreview;
@@ -217,7 +217,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         fillButtonList(buttonFunctionsList);
 
         //init of view model attrs
-        new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()))
+        new ViewModelProvider(this, (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()))
                 .get(CameraXViewModel.class)
                 .getProcessCameraProvider()
                 .observe(
@@ -272,7 +272,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         buttonFunctionsList.add(noteFunctionBtn);
         buttonFunctionsList.add(zoomBtn);
         buttonFunctionsList.add(settingsBtn);
-        buttonFunctionsList.add(helpBtn);
 
     }
 
@@ -557,7 +556,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         imageDescriptionBtn = findViewById(R.id.imageDescriptionBtn);
         noteFunctionBtn = findViewById(R.id.noteFunctionBtn);
         settingsBtn = findViewById(R.id.settingsBtn);
-        helpBtn = findViewById(R.id.helpBtn);
         //text detections result textview
         textview = findViewById(R.id.textview);
         noteET = findViewById(R.id.noteET);
@@ -644,13 +642,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 }
         );
         info.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                quickText = false;
-                Toast.makeText(CameraActivity.this,"Show info for selected function",Toast.LENGTH_SHORT).show();
-            }
-        });
-        helpBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 quickText = false;

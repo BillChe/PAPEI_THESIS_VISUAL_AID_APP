@@ -3,22 +3,22 @@
     <item android:state_selected="true" >
         <shape android:shape="rectangle"  >
             <corners android:radius="3dip" />
-            <stroke android:width="1dip" android:color="@color/purple_700" />
-            <gradient android:angle="-90" android:startColor="@color/black" android:endColor="@color/purple_700"  />
+            <stroke android:width="1dip" android:color="@color/blue" />
+            <gradient android:angle="-90" android:startColor="@color/black" android:endColor="@color/blue"  />
         </shape>
     </item>
     <item android:state_pressed="true" >
         <shape android:shape="rectangle"  >
             <corners android:radius="3dip" />
-            <stroke android:width="1dip" android:color="@color/purple_700" />
-            <gradient android:angle="-90" android:startColor="@color/black" android:endColor="@color/purple_700"  />
+            <stroke android:width="1dip" android:color="@color/blue" />
+            <gradient android:angle="-90" android:startColor="@color/black" android:endColor="@color/blue"  />
         </shape>
     </item>
     <item android:state_focused="true">
         <shape android:shape="rectangle"  >
             <corners android:radius="3dip" />
-            <stroke android:width="1dip" android:color="@color/purple_700" />
-            <solid android:color="@color/purple_700"/>
+            <stroke android:width="1dip" android:color="@color/blue" />
+            <solid android:color="@color/blue"/>
         </shape>
     </item>
     <item android:state_enabled="false">
@@ -31,8 +31,8 @@
     <item >
         <shape android:shape="rectangle"  >
             <corners android:radius="3dip" />
-            <stroke android:width="1dip" android:color="@color/purple_700" />
-            <gradient android:angle="-90" android:startColor="@color/white" android:endColor="@color/purple_700" />
+            <stroke android:width="1dip" android:color="@color/blue" />
+            <gradient android:angle="-90" android:startColor="@color/white" android:endColor="@color/blue" />
         </shape>
     </item>
 </selector>
