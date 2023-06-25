@@ -102,36 +102,32 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
       // If classification was enabled:
       if (face.getSmilingProbability() != null) {
         float smileProb = face.getSmilingProbability();
-
         //todo vasilis add here optimization on this
-        if(smileProb > 0.50 && smileProb <= 0.80)
+        if(smileProb > 0.50 && smileProb < 0.80)
         {
          /* Toast.makeText(context,
                   "face detected probably smiling?"+ smileProb,Toast.LENGTH_SHORT).show();*/
-          if(player.isPlaying())
+          if(player!= null && player.isPlaying())
           {
             player.pause();
           }
         }
         else if(smileProb <= 0.50)
         {
-          if(player.isPlaying())
+          if(player!= null && player.isPlaying())
           {
             player.pause();
-
           }
          /* Toast.makeText(context,
                   "face detected and why so serious???"+ smileProb,Toast.LENGTH_SHORT).show();*/
         }
-        else if (smileProb > 0.80) {
-
+        else if (smileProb >= 0.80) {
          /* Toast.makeText(context,
                   "face detected and SMILIIIING!"+ smileProb,Toast.LENGTH_SHORT).show();*/
-          if(!player.isPlaying())
+          if(player!= null && !player.isPlaying())
           {
             playMusic();
           }
-
         }
       }
       else
@@ -153,10 +149,6 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
     }
   }
   private void playMusic() {
-    player.start();
-  }
-
-  private void resumeMusic() {
     player.start();
   }
 
@@ -243,7 +235,7 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
 
   @Override
   protected void onFailure(@NonNull Exception e) {
-    if(player.isPlaying())
+    if(player!= null && player.isPlaying())
     {
       player.pause();
     }
