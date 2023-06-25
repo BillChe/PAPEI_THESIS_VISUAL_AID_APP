@@ -4,21 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SplashActivity"
+    tools:context=".SplashActivity">
 
-    >
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/appTitle"
         android:text="@string/app_name"
         android:gravity="center_horizontal"
-        android:textSize="20sp"
+        android:textSize="26sp"
+        android:textColor="@color/blue"
+        android:fontFamily="sans-serif-medium"
         app:layout_constraintBottom_toTopOf="@id/androideye"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-       >
+        app:layout_constraintTop_toTopOf="parent">
 
     </TextView>
 
@@ -27,31 +27,38 @@
         android:id="@+id/androideye"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:src="@drawable/androideye"
+        android:src="@drawable/eyewallpaper"
         app:layout_constraintTop_toBottomOf="@+id/appTitle"
-        app:layout_constraintBottom_toTopOf="@+id/logo"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottomLogos"
+        app:layout_constraintStart_toStartOf="parent" />
 
-     />
-    <ImageView
-        android:id="@+id/logo"
+    <LinearLayout
+        android:id="@id/bottomLogos"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:src="@drawable/androidlogo"
-
-        app:layout_constraintTop_toBottomOf="@id/androideye"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/androideye"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/papeiLogo"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-        />
-    <ImageView
-        android:id="@+id/papeiLogo"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:src="@drawable/papei_horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/logo"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
 
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:src="@drawable/androidlogo"
+            android:layout_weight="1"/>
+        <ImageView
+            android:id="@+id/accslogo"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:src="@drawable/accs_icon"
+            android:layout_weight="1"/>
+        <ImageView
+            android:id="@+id/papeiLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:src="@drawable/papei_horizontal"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
