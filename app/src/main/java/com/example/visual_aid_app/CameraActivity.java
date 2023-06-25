@@ -134,9 +134,9 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn, textDetection, negativeCam;
     private Button zoomBtn, textDetectBtn,
             quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
-            colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,settingsBtn,
+            colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,
             button_switch_camera, button_savenote;
-    private ImageView flashBtn, info, blackwhite;
+    private ImageView flashBtn, info, blackwhite,settingsBtn;
     ImageView showImageView,showImageViewPreview;
     private CameraActivityViewModel mViewModel;
     ActivityCameraBinding binding;
@@ -270,7 +270,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         buttonFunctionsList.add(lightFunctionBtn);
         buttonFunctionsList.add(noteFunctionBtn);
         buttonFunctionsList.add(zoomBtn);
-        buttonFunctionsList.add(settingsBtn);
 
     }
 
@@ -439,6 +438,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         flashBtn = findViewById(R.id.flashBtn);
         info = findViewById(R.id.info);
         blackwhite = findViewById(R.id.blackwhite);
+        settingsBtn = findViewById(R.id.settingsBtn);
+
         showImageView = findViewById(R.id.showImageView);
         button_savenote = findViewById(R.id.button_savenote);
         showImageViewPreview =  findViewById(R.id.showImageViewPreview);
@@ -454,7 +455,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         lightFunctionBtn = findViewById(R.id.lightFunctionBtn);
         imageDescriptionBtn = findViewById(R.id.imageDescriptionBtn);
         noteFunctionBtn = findViewById(R.id.noteFunctionBtn);
-        settingsBtn = findViewById(R.id.settingsBtn);
         //text detections result textview
         textview = findViewById(R.id.textview);
         noteET = findViewById(R.id.noteET);
@@ -850,46 +850,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         Intent captureIntent = new Intent(CameraActivity.this, WelcomeActivity.class);
         startActivity(captureIntent);
 
-    }
-
-
-    private void detectText(Bitmap imageBitmap) {
-        InputImage image = InputImage.fromBitmap(imageBitmap,0);
-        TextRecognizer textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
-        Task<Text> result = textRecognizer.process(image).addOnSuccessListener(new OnSuccessListener<Text>() {
-            @Override
-            public void onSuccess(Text text) {
-                StringBuilder result = new StringBuilder();
-                for(Text.TextBlock textBlock : text.getTextBlocks())
-                {
-                    String blockText = textBlock.getText();
-                    Point[] blockCornerPoint = textBlock.getCornerPoints();
-                    Rect blockFrame = textBlock.getBoundingBox();
-                    for(Text.Line line : textBlock.getLines())
-                    {
-                        String lineText = line.getText();
-                        Point[] lineCornerPoint = line.getCornerPoints();
-                        Rect lineRect = line.getBoundingBox();
-                        for(Text.Element element : line.getElements())
-                        {
-                            String elementText = element.getText();
-                            result.append(elementText);
-                        }
-
-                    }
-                }
-                Toast.makeText(CameraActivity.this,result,
-                        Toast.LENGTH_LONG).show();
-                textview.setText(result);
-
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(CameraActivity.this,"Failed to detect text from image"+e.getMessage(),
-                        Toast.LENGTH_LONG).show();
-            }
-        });
     }
 
     private void bindAnalysisUseCase() {

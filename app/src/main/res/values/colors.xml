@@ -32,4 +32,7 @@
     <color name="light_green_700">#689F38</color>
     <color name="gray">#BFBFBF</color>
     <color name="blue">#4286f4</color>
+    <color name="blue_light">#add8e6</color>
+
+
 </resources>
