@@ -66,7 +66,7 @@ import com.example.visual_aid_app.objectdetector.ObjectDetectorProcessor;
 import com.example.visual_aid_app.posedetector.PoseDetectorProcessor;
 import com.example.visual_aid_app.preference.PreferenceUtils;
 import com.example.visual_aid_app.preference.SettingsActivity;
-import com.example.visual_aid_app.segmenter.SegmenterProcessor;
+
 import com.example.visual_aid_app.textdetector.TextRecognitionProcessor;
 import com.example.visual_aid_app.utils.ColorFinder;
 import com.example.visual_aid_app.utils.Util;
@@ -162,7 +162,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private static final String IMAGE_LABELING_CUSTOM = "Custom Image Labeling (Birds)";
     private static final String CUSTOM_AUTOML_LABELING = "Custom AutoML Image Labeling (Flower)";
     private static final String POSE_DETECTION = "Pose Detection";
-    private static final String SELFIE_SEGMENTATION = "Selfie Segmentation";
     private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
 
     private static final String STATE_SELECTED_MODEL = "selected_model";
@@ -425,106 +424,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 Toast.makeText(CameraActivity.this, "Your Color : " + color, Toast.LENGTH_SHORT).show();
             }
         }).findDominantColor(imageBitmap);
-    }
-
-    private void detectFace(Bitmap imageBitmap) {
-        InputImage image = InputImage.fromBitmap(imageBitmap,0);
-        FaceDetectorOptions highAccuracyOpts =
-                new FaceDetectorOptions.Builder()
-                        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-                        .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
-                        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
-                        .build();
-        FaceDetector detector = FaceDetection.getClient(highAccuracyOpts);
-// Or use the default options:
-// FaceDetector detector = FaceDetection.getClient();
-        Task<List<Face>> result =
-                detector.process(image)
-                        .addOnSuccessListener(
-                                new OnSuccessListener<List<Face>>() {
-                                    @Override
-                                    public void onSuccess(List<Face> faces) {
-                                        // Task completed successfully
-                                        // ...
-
-                                        for (Face face : faces) {
-                                            Rect bounds = face.getBoundingBox();
-                                            float rotY = face.getHeadEulerAngleY();  // Head is rotated to the right rotY degrees
-                                            float rotZ = face.getHeadEulerAngleZ();  // Head is tilted sideways rotZ degrees
-
-                                            // If landmark detection was enabled (mouth, ears, eyes, cheeks, and
-                                            // nose available):
-                                            FaceLandmark leftEar = face.getLandmark(FaceLandmark.LEFT_EAR);
-                                            if (leftEar != null) {
-                                                PointF leftEarPos = leftEar.getPosition();
-                                            }
-
-                                            // If contour detection was enabled:
-                                     /*       List<PointF> leftEyeContour =
-                                                    face.getContour(FaceContour.LEFT_EYE).getPoints();
-                                            List<PointF> upperLipBottomContour =
-                                                    face.getContour(FaceContour.UPPER_LIP_BOTTOM).getPoints();*/
-                                            // If classification was enabled:
-                                            if (face.getSmilingProbability() != null) {
-                                                float smileProb = face.getSmilingProbability();
-
-                                                //todo vasilis add here optimization on this
-                                                if(smileProb > 0.50 && smileProb <= 0.80)
-                                                {
-                                                    Toast.makeText(CameraActivity.this,
-                                                            "face detected probably smiling?"+ smileProb,Toast.LENGTH_SHORT).show();
-                                                } else if (smileProb > 0.80) {
-
-                                                    Toast.makeText(CameraActivity.this,
-                                                            "face detected and SMILIIIING!"+ smileProb,Toast.LENGTH_SHORT).show();
-                                                    AssetFileDescriptor afd = null;
-                                                    try {
-                                                        afd = getAssets().openFd("supersonic.mp3");
-                                                    } catch (IOException e) {
-                                                        e.printStackTrace();
-                                                    }
-                                                    MediaPlayer player = new MediaPlayer();
-                                                    try {
-                                                        player.setDataSource(afd.getFileDescriptor(),afd.getStartOffset(),afd.getLength());
-                                                    } catch (IOException e) {
-                                                        e.printStackTrace();
-                                                    }
-                                                    try {
-                                                        player.prepare();
-                                                    } catch (IOException e) {
-                                                        e.printStackTrace();
-                                                    }
-                                                    player.start();
-                                                }
-                                                else if(smileProb < 0.50)
-                                                {
-                                                    Toast.makeText(CameraActivity.this,
-                                                            "face detected and why so serious???"+ smileProb,Toast.LENGTH_SHORT).show();
-                                                }
-                                            }
-                                            if (face.getRightEyeOpenProbability() != null) {
-                                                float rightEyeOpenProb = face.getRightEyeOpenProbability();
-                                            }
-
-                                            // If face tracking was enabled:
-                                            if (face.getTrackingId() != null) {
-                                                int id = face.getTrackingId();
-                                            }
-                                        }
-
-
-                                    }
-                                })
-                        .addOnFailureListener(
-                                new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        // Task failed with an exception
-                                        // ...
-                                        Toast.makeText(CameraActivity.this,
-                                                "no face detected",Toast.LENGTH_SHORT).show();
-                                    }
-                                });
     }
 
     private void quickTextDetection(Bitmap bitmap, boolean isDocument)
@@ -953,46 +852,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
     }
 
-    /**
-     * Gets TextBlock from TextRecognizer, set Text to TextView
-     * and Speaks it if listen button is clicked
-     */
-    private void detectText(){
-
-        textRecognizer.setProcessor(new Detector.Processor<TextBlock>() {
-            @Override
-            public void receiveDetections(Detector.Detections<TextBlock> detections) {
-                final SparseArray<TextBlock> items = detections.getDetectedItems();
-                if (items.size() != 0 ){
-                    textview.post(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            //Gets strings from TextBlock and adds to StringBuilder
-                            final StringBuilder stringBuilder = new StringBuilder();
-                            for(int i=0; i<items.size(); i++)
-                                stringBuilder.append(items.valueAt(i).getValue());
-
-                            //Set Text to screen and speaks it if button clicked
-                            textview.setText(stringBuilder.toString());
-                            textToSpeech.speak(stringBuilder.toString(), TextToSpeech.QUEUE_FLUSH, null);
-                         /*   findViewById(R.id.voice).setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    Log.i("OnClickListener","Text is reading");
-                                    textToSpeech.speak(stringBuilder.toString(), TextToSpeech.QUEUE_FLUSH, null);
-                                }
-                            });*/
-                        }
-                    });
-                }
-            }
-            @Override
-            public void release() {
-            }
-        });
-    }
-
 
     private void detectText(Bitmap imageBitmap) {
         InputImage image = InputImage.fromBitmap(imageBitmap,0);
@@ -1123,9 +982,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                                     rescaleZ,
                                     runClassification,
                                     /* isStreamMode = */  true);
-                    break;
-                case SELFIE_SEGMENTATION:
-                    imageProcessor = new SegmenterProcessor(this);
                     break;
 
                 default:

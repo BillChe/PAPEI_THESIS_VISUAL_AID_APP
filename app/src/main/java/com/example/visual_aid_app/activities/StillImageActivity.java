@@ -50,7 +50,7 @@ import com.example.visual_aid_app.objectdetector.ObjectDetectorProcessor;
 import com.example.visual_aid_app.posedetector.PoseDetectorProcessor;
 import com.example.visual_aid_app.preference.PreferenceUtils;
 import com.example.visual_aid_app.preference.SettingsActivity;
-import com.example.visual_aid_app.segmenter.SegmenterProcessor;
+
 import com.example.visual_aid_app.textdetector.TextRecognitionProcessor;
 import com.google.android.gms.common.annotation.KeepName;
 import com.google.mlkit.common.model.LocalModel;
@@ -82,7 +82,6 @@ public final class StillImageActivity extends AppCompatActivity {
   private static final String IMAGE_LABELING_CUSTOM = "Custom Image Labeling (Birds)";
   private static final String CUSTOM_AUTOML_LABELING = "Custom AutoML Image Labeling (Flower)";
   private static final String POSE_DETECTION = "Pose Detection";
-  private static final String SELFIE_SEGMENTATION = "Selfie Segmentation";
   private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
   private static final String TEXT_RECOGNITION_CHINESE = "Text Recognition Chinese (Beta)";
   private static final String TEXT_RECOGNITION_DEVANAGARI = "Text Recognition Devanagari (Beta)";
@@ -215,7 +214,6 @@ public final class StillImageActivity extends AppCompatActivity {
     options.add(IMAGE_LABELING_CUSTOM);
     options.add(CUSTOM_AUTOML_LABELING);
     options.add(POSE_DETECTION);
-    options.add(SELFIE_SEGMENTATION);
     options.add(TEXT_RECOGNITION_LATIN);
     options.add(TEXT_RECOGNITION_CHINESE);
     options.add(TEXT_RECOGNITION_DEVANAGARI);
@@ -481,9 +479,6 @@ public final class StillImageActivity extends AppCompatActivity {
                   rescaleZ,
                   runClassification,
                   /* isStreamMode = */ false);
-          break;
-        case SELFIE_SEGMENTATION:
-          imageProcessor = new SegmenterProcessor(this, /* isStreamMode= */ false);
           break;
         default:
           Log.e(TAG, "Unknown selectedMode: " + selectedMode);

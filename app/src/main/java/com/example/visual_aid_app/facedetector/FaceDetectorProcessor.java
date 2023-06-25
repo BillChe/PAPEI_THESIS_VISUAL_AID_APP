@@ -48,28 +48,13 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
   private static final String TAG = "FaceDetectorProcessor";
 
   private final FaceDetector detector;
-  MediaPlayer player ;
+  AssetFileDescriptor afd = null;
+  MediaPlayer player = null;
   Context context;
 
   public FaceDetectorProcessor(Context context) {
     super(context);
-     player = new MediaPlayer();
-    AssetFileDescriptor afd = null;
-    try {
-      afd = context.getAssets().openFd("supersonic.mp3");
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    try {
-      player.setDataSource(afd.getFileDescriptor(),afd.getStartOffset(),afd.getLength());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    try {
-      player.prepare();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    prepareAudioPlayer(context);
     FaceDetectorOptions faceDetectorOptions = PreferenceUtils.getFaceDetectorOptions(context);
     FaceDetectorOptions highAccuracyOpts =
             new FaceDetectorOptions.Builder()
@@ -121,30 +106,40 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
         //todo vasilis add here optimization on this
         if(smileProb > 0.50 && smileProb <= 0.80)
         {
-          /*Toast.makeText(context,
+         /* Toast.makeText(context,
                   "face detected probably smiling?"+ smileProb,Toast.LENGTH_SHORT).show();*/
-        } else if (smileProb > 0.80) {
+          if(player.isPlaying())
+          {
+            player.pause();
+          }
+        }
+        else if(smileProb <= 0.50)
+        {
+          if(player.isPlaying())
+          {
+            player.pause();
+
+          }
+         /* Toast.makeText(context,
+                  "face detected and why so serious???"+ smileProb,Toast.LENGTH_SHORT).show();*/
+        }
+        else if (smileProb > 0.80) {
 
          /* Toast.makeText(context,
                   "face detected and SMILIIIING!"+ smileProb,Toast.LENGTH_SHORT).show();*/
-
-
-
-          if(player.isPlaying())
+          if(!player.isPlaying())
           {
-            //stop or pause your media player mediaPlayer.stop(); or mediaPlayer.pause();
-            player.pause();
+            playMusic();
           }
-          else
-          {
-            player.start();
-          }
-          //player.start();
+
         }
-        else if(smileProb < 0.50)
+      }
+      else
+      {
+        if(player.isPlaying())
         {
-        /*  Toast.makeText(context,
-                  "face detected and why so serious???"+ smileProb,Toast.LENGTH_SHORT).show();*/
+          player.pause();
+
         }
       }
       if (face.getRightEyeOpenProbability() != null) {
@@ -157,7 +152,32 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
       }
     }
   }
+  private void playMusic() {
+    player.start();
+  }
 
+  private void resumeMusic() {
+    player.start();
+  }
+
+  private void prepareAudioPlayer(Context context) {
+    player = new MediaPlayer();
+    try {
+      afd = context.getAssets().openFd("supersonic.mp3");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    try {
+      player.setDataSource(afd.getFileDescriptor(),afd.getStartOffset(),afd.getLength());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    try {
+      player.prepare();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
   private static void logExtrasForTesting(Face face) {
     if (face != null) {
       Log.v(MANUAL_TESTING_LOG, "face bounding box: " + face.getBoundingBox().flattenToString());
@@ -223,6 +243,10 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
 
   @Override
   protected void onFailure(@NonNull Exception e) {
+    if(player.isPlaying())
+    {
+      player.pause();
+    }
     Log.e(TAG, "Face detection failed " + e);
   }
 }
