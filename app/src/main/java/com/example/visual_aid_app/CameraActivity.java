@@ -7,6 +7,8 @@ import static com.example.visual_aid_app.utils.Util.checkHasWritgeExternalStorag
 import static com.example.visual_aid_app.ZoomActivity.decodeStrem;
 import static com.example.visual_aid_app.ZoomActivity.rotateImage;
 
+import static java.lang.Math.max;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +32,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
@@ -43,6 +46,7 @@ import android.os.Handler;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.util.Pair;
 import android.util.Size;
 import android.util.SparseArray;
 import android.view.Surface;
@@ -57,6 +61,7 @@ import android.widget.Toast;
 import android.widget.ZoomControls;
 
 
+import com.example.visual_aid_app.camera_utils.BitmapUtils;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.camera_utils.VisionImageProcessor;
 import com.example.visual_aid_app.databinding.ActivityCameraBinding;
@@ -198,8 +203,15 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         } catch (final PackageManager.NameNotFoundException e) {
             applicationInfo = null;
         }
-        applicationName = (String) (applicationInfo != null ? pm.getApplicationLabel(applicationInfo) : "VisualAidApp");
+        applicationName = (String) (applicationInfo != null ? pm.getApplicationLabel(applicationInfo)
+                : "VisualAidApp");
         // Init TextToSpeech and set language
+        //get LANGUAGE configuration and adjust flow and texts
+        String currentLanguage = Locale.getDefault().getDisplayLanguage();
+        Locale locale = new Locale(currentLanguage);
+        Locale.setDefault(locale);
+        Configuration config = new Configuration();
+        config.locale = locale;
         textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
@@ -281,6 +293,15 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             {
                 buttonFunctionsList.get(i).setSelected(false);
             }
+        }
+        //hide note text view
+        if(!tag.equals(noteFunctionBtn.getTag()))
+        {
+            noteET.setVisibility(View.GONE);
+        }
+        else
+        {
+            noteET.setVisibility(View.VISIBLE);
         }
     }
 
@@ -420,7 +441,9 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         new ColorFinder(new ColorFinder.CallbackInterface() {
             @Override
             public void onCompleted(String color) {
-                Toast.makeText(CameraActivity.this, "Your Color : " + color, Toast.LENGTH_SHORT).show();
+                Log.e("CameraActivity", "Color found: " + color);
+
+                Toast.makeText(CameraActivity.this, "Your Color : " + color, Toast.LENGTH_LONG).show();
             }
         }).findDominantColor(imageBitmap);
     }
@@ -459,11 +482,55 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         textview = findViewById(R.id.textview);
         noteET = findViewById(R.id.noteET);
     }
+    private void tryReloadAndDetectInImage(Bitmap resizedBitmap) {
+        Log.d(TAG, "Try reload and detect image");
+      //  try {
+            // Clear the overlay first
+            graphicOverlay.clear();
 
+   /*         Bitmap resizedBitmap;
+            if (selectedSize.equals(SIZE_ORIGINAL)) {
+                resizedBitmap = imageBitmap;
+            } else {
+                // Get the dimensions of the image view
+                Pair<Integer, Integer> targetedSize = getTargetedWidthHeight();
+
+                // Determine how much to scale down the image
+                float scaleFactor =
+                        max(
+                                (float) imageBitmap.getWidth() / (float) targetedSize.first,
+                                (float) imageBitmap.getHeight() / (float) targetedSize.second);
+
+                resizedBitmap =
+                        Bitmap.createScaledBitmap(
+                                imageBitmap,
+                                (int) (imageBitmap.getWidth() / scaleFactor),
+                                (int) (imageBitmap.getHeight() / scaleFactor),
+                                true);
+            }
+
+            preview.setImageBitmap(resizedBitmap);
+*/
+            if (imageProcessor != null) {
+                graphicOverlay.setImageSourceInfo(
+                        resizedBitmap.getWidth(), resizedBitmap.getHeight(), /* isFlipped= */ false);
+                imageProcessor.processBitmap(resizedBitmap, graphicOverlay);
+            } else {
+                Log.e(TAG, "Null imageProcessor, please check adb logs for imageProcessor creation error");
+            }
+       /* } catch (IOException e) {
+            Log.e(TAG, "Error retrieving saved image");
+            imageFilePath = null;
+        }*/
+    }
     private void takePhoto() {
+        Toast.makeText(CameraActivity.this,
+                        context.getString(R.string.savingPleaseWait),
+                        Toast.LENGTH_SHORT).show();
         File photoFile = getOutputDirectory();
 
-        ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(photoFile).build();
+        ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.
+                Builder(photoFile).build();
 
         imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this),
                 new ImageCapture.OnImageSavedCallback() {
@@ -480,7 +547,18 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                                     msg, Toast.LENGTH_LONG)
                             .show();
                     showImageViewPreview.setImageBitmap(savedImageBitmap);
+                    //todo vasilis add text recognition handling on saved image
+                    //here
+                    if(selectedModel.equals( TEXT_RECOGNITION_LATIN)
+                        && !quickText)
+                    tryReloadAndDetectInImage(savedImageBitmap);
 
+                    if(colorRecognitionBtn.isSelected())
+                    {
+                        savedImageBitmap = rotateImage(savedImageBitmap, imageFilePath);
+
+                        detectColor(savedImageBitmap);
+                    }
                 }
             }
 
@@ -514,18 +592,35 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     }
 
     private void setListeners() {
+        showImageViewPreview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                File latestImage = new File(imageFilePath);
+                if (!latestImage.exists())
+                    return;
+
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.parse(imageFilePath),
+                        "image/*");
+                startActivity(intent);
+            }
+        });
         flashBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(!flashOn)
                 {
                     flashOn = true;
-                    flashBtn.setBackground(getDrawable(R.drawable.flash_on_icon));
+                    flashBtn.setBackground(getDrawable(R.drawable.flashoff));
+                    flashBtn.setContentDescription(context.getString(R.string.flashOffBtn));
                 }
                 else
                 {
                     flashOn = false;
-                    flashBtn.setBackground(getDrawable(R.drawable.flashoff));
+                    flashBtn.setBackground(getDrawable(R.drawable.flash_on_icon));
+                    flashBtn.setContentDescription(context.getString(R.string.flashBtn));
+
                 }
                 bindPreviewUseCase();
             }
@@ -762,7 +857,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 mViewModel.setZoomOn(false);
                 negativeCam = false;
                 textDetection = false;*/
-                noteET.setVisibility(View.VISIBLE);
+                //noteET.setVisibility(View.VISIBLE);
                 button_savenote.setEnabled(true);
                 quickText = false;
                /* mViewModel.setNoteOn(true);*/
@@ -846,11 +941,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
     }
 
-    private void showHelpActivity() {
-        Intent captureIntent = new Intent(CameraActivity.this, WelcomeActivity.class);
-        startActivity(captureIntent);
-
-    }
 
     private void bindAnalysisUseCase() {
         if (cameraProvider == null) {

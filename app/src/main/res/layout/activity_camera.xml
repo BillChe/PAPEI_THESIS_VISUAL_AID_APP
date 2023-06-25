@@ -23,12 +23,15 @@ android:layout_height="match_parent">
 
     <ImageView
         android:id="@+id/flashBtn"
-        android:background="@drawable/flashoff"
+        android:background="@drawable/flash_on_icon"
         android:textAllCaps="false"
         android:layout_width="35dp"
         android:layout_height="35dp"
         android:backgroundTint="@color/white"
-        android:layout_margin="2dp">
+        android:layout_margin="2dp"
+        android:contentDescription="@string/flashBtn"
+
+    >
     </ImageView>
 
     <ImageView
@@ -38,7 +41,8 @@ android:layout_height="match_parent">
         android:layout_width="35dp"
         android:layout_height="35dp"
         android:backgroundTint="@color/white"
-        android:layout_margin="2dp">
+        android:layout_margin="2dp"
+        android:contentDescription="@string/blackwhiteBtn">
     </ImageView>
 
     <ImageView
@@ -48,7 +52,8 @@ android:layout_height="match_parent">
         android:layout_width="35dp"
         android:layout_height="35dp"
         android:backgroundTint="@color/white"
-        android:layout_margin="2dp">
+        android:layout_margin="2dp"
+        android:contentDescription="@string/infoBtn">
     </ImageView>
 
     <Space
@@ -63,7 +68,8 @@ android:layout_height="match_parent">
         android:layout_width="35dp"
         android:layout_height="35dp"
         android:backgroundTint="@color/white"
-        android:layout_margin="2dp">
+        android:layout_margin="2dp"
+        android:contentDescription="@string/settingsBtn">
     </ImageView>
 
 </LinearLayout>
@@ -80,7 +86,8 @@ android:layout_height="match_parent">
         android:layout_marginTop="20dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
-        android:elevation="1dp">
+        android:elevation="1dp"
+        android:contentDescription="text found text preview">
 
     </TextView>
 
@@ -96,7 +103,8 @@ android:layout_height="match_parent">
         android:layout_marginTop="20dp"
         android:elevation="1dp"
         android:visibility="gone"
-        android:imeOptions="actionDone">
+        android:imeOptions="actionDone"
+        android:contentDescription="note preview text">
 
     </EditText>
 
@@ -110,7 +118,8 @@ android:layout_height="match_parent">
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintTop_toBottomOf="@id/textview"
     android:clickable="true"
-    android:longClickable="true">
+    android:longClickable="true"
+    android:contentDescription="show image view">
 </ImageView>
 
     <SurfaceView
@@ -136,7 +145,8 @@ android:layout_height="match_parent">
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/topMenuButtonsLayout"
-        app:layout_constraintVertical_bias="1.0"/>
+        app:layout_constraintVertical_bias="1.0"
+        android:contentDescription="camera preview view"/>
 
     <com.example.visual_aid_app.camera_utils.GraphicOverlay
         android:id="@+id/graphic_overlay"
@@ -149,7 +159,8 @@ android:layout_height="match_parent">
         app:layout_constraintTop_toBottomOf="@id/topMenuButtonsLayout"
         app:layout_constraintVertical_bias="1.0"
         app:layout_constraintHorizontal_bias="0.0"
-        android:layout_marginTop="30dp" />
+        android:layout_marginTop="30dp"
+        android:contentDescription="graphic overlay"/>
 
     <ZoomControls
     android:layout_width="wrap_content"
@@ -160,7 +171,8 @@ android:layout_height="match_parent">
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintBottom_toTopOf="@id/functionsMenu">
+    app:layout_constraintBottom_toTopOf="@id/functionsMenu"
+    android:contentDescription="@string/zoomControlBtn">
     </ZoomControls>
 
     <HorizontalScrollView
@@ -187,7 +199,8 @@ android:layout_height="match_parent">
             android:textAllCaps="false"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/roundedbtn">
+            android:background="@drawable/roundedbtn"
+            android:contentDescription="@string/text_detection_btn">
         </Button>
 
         <Button
@@ -197,7 +210,9 @@ android:layout_height="match_parent">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/roundedbtn"
-            android:tag="quickTextDetectBtn">
+            android:tag="quickTextDetectBtn"
+            android:contentDescription="@string/quick_text_detection_btn"
+            >
         </Button>
 
         <Button
@@ -207,7 +222,8 @@ android:layout_height="match_parent">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/roundedbtn"
-            android:tag="documentDetectBtn">
+            android:tag="documentDetectBtn"
+            android:contentDescription="@string/document_detection_btn">
         </Button>
 
         <Button
@@ -217,7 +233,8 @@ android:layout_height="match_parent">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/roundedbtn"
-            android:tag="imageDescriptionBtn">
+            android:tag="imageDescriptionBtn"
+            android:contentDescription="@string/image_detection_btn">
         </Button>
 
         <Button
@@ -227,7 +244,8 @@ android:layout_height="match_parent">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/roundedbtn"
-            android:tag="faceDetectionBtn">
+            android:tag="faceDetectionBtn"
+            android:contentDescription="@string/face_detection_btn">
         </Button>
 
         <Button
@@ -237,7 +255,8 @@ android:layout_height="match_parent">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/roundedbtn"
-            android:tag="zoomBtn">
+            android:tag="zoomBtn"
+            android:contentDescription="@string/zoom_btn">
         </Button>
 
         <Button
@@ -247,7 +266,9 @@ android:layout_height="match_parent">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/roundedbtn"
-            android:tag="colorRecognitionBtn">
+            android:tag="colorRecognitionBtn"
+            android:contentDescription="@string/color_detection_btn"
+            >
         </Button>
 
         <Button
@@ -257,7 +278,8 @@ android:layout_height="match_parent">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/roundedbtn"
-            android:tag="lightFunctionBtn">
+            android:tag="lightFunctionBtn"
+            android:contentDescription="@string/light_btn">
         </Button>
 
         <Button
@@ -267,7 +289,8 @@ android:layout_height="match_parent">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/roundedbtn"
-            android:tag="noteFunctionBtn">
+            android:tag="noteFunctionBtn"
+            android:contentDescription="@string/take_note_btn">
         </Button>
 
     </LinearLayout>
@@ -308,7 +331,8 @@ android:layout_height="match_parent">
             android:background="@drawable/zoom_icon"
             android:backgroundTint="@color/blue"
             android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp">
+            android:layout_marginEnd="5dp"
+            android:contentDescription="@string/zoomFunctionBtn">
         </Button>
 
         <Button
@@ -320,7 +344,8 @@ android:layout_height="match_parent">
             android:background="@drawable/camera_take_pic_icon"
             android:backgroundTint="@color/blue"
             android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp" />
+            android:layout_marginEnd="5dp"
+            android:contentDescription="@string/button_capture"/>
 
         <Button
             android:id="@+id/button_switch_camera"
@@ -331,7 +356,8 @@ android:layout_height="match_parent">
             android:background="@drawable/ic_switch_camera"
             android:backgroundTint="@color/blue"
             android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp" />
+            android:layout_marginEnd="5dp"
+            android:contentDescription="@string/switch_camera_button"/>
 
         <Button
             android:id="@+id/button_savenote"
@@ -341,8 +367,8 @@ android:layout_height="match_parent">
             android:layout_gravity="center"
             android:background="@drawable/ic_save"
             android:backgroundTint="@color/blue"
-            android:enabled="false"
-            android:layout_marginStart="5dp" />
+            android:layout_marginStart="5dp"
+            android:contentDescription="@string/autosave_button"/>
 
     </LinearLayout>
 

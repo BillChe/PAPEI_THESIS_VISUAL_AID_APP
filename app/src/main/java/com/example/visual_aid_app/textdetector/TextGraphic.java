@@ -59,7 +59,8 @@ public class TextGraphic extends GraphicOverlay.Graphic {
   private final boolean shouldGroupTextInBlocks;
   private final boolean showLanguageTag;
   private final boolean showConfidence;
-  private float confidenceMetric = 0.76f;
+  //todo vasilis recheck and add better handling on confidence metric
+  private float confidenceMetric = 0.6f;
   TextToSpeech tts;
 
   TextGraphic(
@@ -117,7 +118,7 @@ public class TextGraphic extends GraphicOverlay.Graphic {
         for (Line line : textBlock.getLines()) {
           if(CameraActivity.quickText)
           {
-            confidenceMetric = 0.70f;
+            confidenceMetric = 0.50f;
           }
           if(line.getConfidence()>=confidenceMetric)
           {

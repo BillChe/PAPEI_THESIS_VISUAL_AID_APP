@@ -14,9 +14,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.widget.Toast;
-
-import com.example.visual_aid_app.activities.ChooserActivity;
-
 import java.util.Locale;
 
 public class SplashActivity extends AppCompatActivity {

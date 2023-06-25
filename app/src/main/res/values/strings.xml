@@ -14,8 +14,33 @@
     <string name="pdfreader_option">For PDF Reader Option</string>
     <string name="help_option">For Help Option</string>
     <string name="settings_option">For Settings Menu Option</string>
+    <!--accessibility strings-->
+    <string name="text_detection_btn">Text Detection Button</string>
+    <string name="quick_text_detection_btn">Quick Text Detection Button</string>
+    <string name="document_detection_btn">Document Text Detection Button</string>
+    <string name="image_detection_btn">Image Description Button</string>
+    <string name="face_detection_btn">Face Detection Button</string>
+    <string name="zoom_btn">Zoom Button</string>
+    <string name="color_detection_btn">Color Recognition Button</string>
+    <string name="light_btn">Light Button</string>
+    <string name="take_note_btn"> Take Note Button</string>
+    <string name="zoomFunctionBtn"> Zoom Function Button</string>
+    <string name="button_capture"> Capture Image Button</string>
+    <string name="switch_camera_button"> Switch Camera Button</string>
+    <string name="autosave_button">Auto save Button</string>
 
-    //MLKIT STRINGS
+    <string name="flashBtn"> Flash On Button</string>
+    <string name="flashOffBtn"> Flash Off Button</string>
+    <string name="blackwhiteBtn"> Black and white picture Button</string>
+    <string name="infoBtn"> Information Button</string>
+    <string name="settingsBtn"> settings Button</string>
+
+    <string name="zoomControlBtn"> zoom controls Button</string>
+    <string name="savingPleaseWait">Saving… Please wait</string>
+
+
+
+    <!--MLKIT STRINGS-->
     <string name="java_entry_title" translatable="false">Run the ML Kit quickstart written in Java</string>
     <string name="kotlin_entry_title" translatable="false">Run the ML Kit quickstart written in Kotlin</string>
     <string name="ok" translatable="false">OK</string>
@@ -36,8 +61,6 @@
 
     <!-- Settings related strings. -->
     <string name="pref_screen" translatable="false">ps</string>
-    <string name="pref_screen_title_live_preview" translatable="false">Live preview settings</string>
-    <string name="pref_screen_title_still_image" translatable="false">Still image settings</string>
     <string name="pref_screen_title_camerax_live_preview" translatable="false">CameraX live preview settings</string>
     <string name="pref_screen_title_cameraxsource_demo" translatable="false">CameraXSource live preview settings</string>
     <string name="pref_category_info" translatable="false">Detection Info</string>
