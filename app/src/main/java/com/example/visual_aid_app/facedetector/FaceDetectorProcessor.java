@@ -39,14 +39,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-/** Face Detector Demo. */
+/** Face Detector */
 public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
 
   private static final String TAG = "FaceDetectorProcessor";
 
   private final FaceDetector detector;
-  AssetFileDescriptor afd = null;
-  MediaPlayer player = null;
+  private AssetFileDescriptor afd = null;
+  private MediaPlayer player = null;
   Context context;
 
   public FaceDetectorProcessor(Context context) {
