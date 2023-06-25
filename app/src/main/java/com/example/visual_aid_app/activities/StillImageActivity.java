@@ -83,12 +83,6 @@ public final class StillImageActivity extends AppCompatActivity {
   private static final String CUSTOM_AUTOML_LABELING = "Custom AutoML Image Labeling (Flower)";
   private static final String POSE_DETECTION = "Pose Detection";
   private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
-  private static final String TEXT_RECOGNITION_CHINESE = "Text Recognition Chinese (Beta)";
-  private static final String TEXT_RECOGNITION_DEVANAGARI = "Text Recognition Devanagari (Beta)";
-  private static final String TEXT_RECOGNITION_JAPANESE = "Text Recognition Japanese (Beta)";
-  private static final String TEXT_RECOGNITION_KOREAN = "Text Recognition Korean (Beta)";
-  private static final String FACE_MESH_DETECTION = "Face Mesh Detection (Beta)";
-
   private static final String SIZE_SCREEN = "w:screen"; // Match screen width
   private static final String SIZE_1024_768 = "w:1024"; // ~1024*768 in a normal ratio
   private static final String SIZE_640_480 = "w:640"; // ~640*480 in a normal ratio
@@ -215,11 +209,6 @@ public final class StillImageActivity extends AppCompatActivity {
     options.add(CUSTOM_AUTOML_LABELING);
     options.add(POSE_DETECTION);
     options.add(TEXT_RECOGNITION_LATIN);
-    options.add(TEXT_RECOGNITION_CHINESE);
-    options.add(TEXT_RECOGNITION_DEVANAGARI);
-    options.add(TEXT_RECOGNITION_JAPANESE);
-    options.add(TEXT_RECOGNITION_KOREAN);
-    options.add(FACE_MESH_DETECTION);
 
     // Creating adapter for featureSpinner
     ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, R.layout.spinner_style, options);

@@ -90,7 +90,6 @@ public final class CameraXLivePreviewActivity extends AppCompatActivity
   private static final String CUSTOM_AUTOML_LABELING = "Custom AutoML Image Labeling (Flower)";
   private static final String POSE_DETECTION = "Pose Detection";
   private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
-  private static final String FACE_MESH_DETECTION = "Face Mesh Detection (Beta)";
 
   private static final String STATE_SELECTED_MODEL = "selected_model";
 
@@ -139,7 +138,6 @@ public final class CameraXLivePreviewActivity extends AppCompatActivity
     options.add(CUSTOM_AUTOML_LABELING);
     options.add(POSE_DETECTION);
     options.add(TEXT_RECOGNITION_LATIN);
-    options.add(FACE_MESH_DETECTION);
 
     // Creating adapter for spinner
     ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, R.layout.spinner_style, options);
