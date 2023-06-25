@@ -23,10 +23,7 @@ import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.util.Log;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
-
-import com.example.visual_aid_app.CameraActivity;
 import com.example.visual_aid_app.activities.VisionProcessorBase;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.preference.PreferenceUtils;
