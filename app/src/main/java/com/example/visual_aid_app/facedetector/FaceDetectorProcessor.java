@@ -71,6 +71,10 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
   public void stop() {
     super.stop();
     detector.close();
+    if(player!= null)
+    {
+      player.stop();
+    }
   }
 
   @Override
