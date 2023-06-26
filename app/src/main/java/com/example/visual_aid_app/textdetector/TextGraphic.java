@@ -62,6 +62,7 @@ public class TextGraphic extends GraphicOverlay.Graphic {
   //todo vasilis recheck and add better handling on confidence metric
   private float confidenceMetric = 0.6f;
   TextToSpeech tts;
+  public static String textFound="";
 
   TextGraphic(
       GraphicOverlay overlay,
@@ -96,6 +97,7 @@ public class TextGraphic extends GraphicOverlay.Graphic {
   @Override
   public void draw(Canvas canvas) {
     Log.d(TAG, "Text is: " + text.getText());
+
     for (TextBlock textBlock : text.getTextBlocks()) {
       // Renders the text at the bottom of the box.
       Log.d(TAG, "TextBlock text is: " + textBlock.getText());
@@ -122,7 +124,8 @@ public class TextGraphic extends GraphicOverlay.Graphic {
           }
           if(line.getConfidence()>=confidenceMetric)
           {
-
+            //todo vasilis text found here to be set on cameraActivity textview for handling
+            textFound =  text.getText();
             //playTextDetectedMessage("");
             Log.d(TAG, "Line text is: " + line.getText());
             Log.d(TAG, "Line boundingbox is: " + line.getBoundingBox());

@@ -2,6 +2,7 @@ package com.example.visual_aid_app;
 
 import static android.content.ContentValues.TAG;
 
+import static com.example.visual_aid_app.textdetector.TextGraphic.textFound;
 import static com.example.visual_aid_app.utils.Util.checkHasCameraPermission;
 import static com.example.visual_aid_app.utils.Util.checkHasWritgeExternalStoragePermission;
 import static com.example.visual_aid_app.ZoomActivity.decodeStrem;
@@ -45,6 +46,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.util.Pair;
 import android.util.Size;
@@ -228,7 +230,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         fillButtonList(buttonFunctionsList);
 
         //init of view model attrs
-        new ViewModelProvider(this, (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()))
+        new ViewModelProvider(this, (ViewModelProvider.Factory) ViewModelProvider.
+                AndroidViewModelFactory.getInstance(getApplication()))
                 .get(CameraXViewModel.class)
                 .getProcessCameraProvider()
                 .observe(
@@ -436,6 +439,42 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
         }
     };*/
+    public void detectText() {
+        InputImage image = InputImage.fromBitmap(savedImageBitmap,0);
+        TextRecognizer textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+        Task<Text> result = textRecognizer.process(image).addOnSuccessListener(new OnSuccessListener<Text>() {
+            @Override
+            public void onSuccess(Text text) {
+                StringBuilder result = new StringBuilder();
+                for(Text.TextBlock textBlock : text.getTextBlocks())
+                {
+                    String blockText = textBlock.getText();
+                    Point[] blockCornerPoint = textBlock.getCornerPoints();
+                    Rect blockFrame = textBlock.getBoundingBox();
+                    for(Text.Line line : textBlock.getLines())
+                    {
+                        String lineText = line.getText();
+                        Point[] lineCornerPoint = line.getCornerPoints();
+                        Rect lineRect = line.getBoundingBox();
+                        for(Text.Element element : line.getElements())
+                        {
+                            String elementText = element.getText();
+                            result.append(elementText);
+
+                        }
+                        textview.setText(blockText);
+
+                    }
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(CameraActivity.this,"Failed to detect text from image"+e.getMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
 
     private void detectColor(Bitmap imageBitmap) {
         new ColorFinder(new ColorFinder.CallbackInterface() {
@@ -558,6 +597,11 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                         savedImageBitmap = rotateImage(savedImageBitmap, imageFilePath);
 
                         detectColor(savedImageBitmap);
+                    }
+                    else if(textDetectBtn.isSelected() || documentDetectBtn.isSelected())
+                    {
+                        textview.setText(textFound);
+                        textview.setMovementMethod(new ScrollingMovementMethod());
                     }
                 }
             }
@@ -984,7 +1028,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 case TEXT_RECOGNITION_LATIN:
                     Log.i(TAG, "Using on-device Text recognition Processor for Latin.");
                     imageProcessor =
-                            new TextRecognitionProcessor(this, new TextRecognizerOptions.Builder().build());
+                            new TextRecognitionProcessor(this,
+                                    new TextRecognizerOptions.Builder().build());
                     break;
                 case FACE_DETECTION:
                     Log.i(TAG, "Using Face Detector Processor");
