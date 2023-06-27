@@ -30,6 +30,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
@@ -44,6 +45,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.text.method.ScrollingMovementMethod;
@@ -130,7 +132,7 @@ public class CameraActivity extends AppCompatActivity {
 /*    private CameraPreview mPreview;*/
 private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     Button captureButton ;
-    protected String imageFilePath,quickCaptureText;
+    protected String imageFilePath,quickCaptureText = "";
     private SurfaceView mCameraView;
     private TextView textview;
     ZoomControls zoomControls;
@@ -170,8 +172,9 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private static final String CUSTOM_AUTOML_LABELING = "Custom AutoML Image Labeling (Flower)";
     private static final String POSE_DETECTION = "Pose Detection";
     private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
-
+    private static final String ZOOM = "Zoom";
     private static final String STATE_SELECTED_MODEL = "selected_model";
+    private static final String LAST_IMAGE = "";
 
     private PreviewView previewView;
     private GraphicOverlay graphicOverlay;
@@ -224,6 +227,10 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         });
 
         setViews();
+
+        //set last image in showImageViewPreview
+        updateshowImageViewPreview();
+
         setListeners();
         //fill Buttons List
         buttonFunctionsList= new ArrayList<>();
@@ -273,6 +280,23 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         }
         imageCapture = new ImageCapture.Builder().build();
 
+
+    }
+
+    private void updateshowImageViewPreview() {
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String lastimageFilePath = prefs.getString("imageFilePath", "imageFilePath");
+        if(lastimageFilePath!=null)
+        {
+            File lastimageFilePathFile = new File(lastimageFilePath);
+            if(lastimageFilePathFile.exists())
+            {
+                imageFilePath = lastimageFilePath;
+                showImageViewPreview.setImageBitmap(
+                        BitmapFactory.decodeFile(lastimageFilePathFile.getAbsolutePath()));
+            }
+        }
     }
 
     private void fillButtonList(List<Button> buttonFunctionsList) {
@@ -305,6 +329,14 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         else
         {
             noteET.setVisibility(View.VISIBLE);
+        }
+        if(!zoomBtn.isSelected())
+        {
+            hideZoomControls();
+        }
+        else
+        {
+
         }
     }
 
@@ -580,6 +612,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 String msg = "Photo captured successfully: " + photoFile.getAbsolutePath();
                // Toast.makeText(CameraActivity.this, msg, Toast.LENGTH_SHORT).show();
                 savedImageBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+
                 if (savedImageBitmap != null) {
                     MediaStore.Images.Media.insertImage(getContentResolver(), savedImageBitmap,
                             photoFile.getPath(),
@@ -587,6 +620,12 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                     Toast.makeText(CameraActivity.this,
                                     msg, Toast.LENGTH_LONG)
                             .show();
+                    //save last file path of image taken in sharedPrefs
+                    SharedPreferences.Editor prefEditor =
+                            PreferenceManager.getDefaultSharedPreferences(context).edit();
+                    prefEditor.putString("imageFilePath", imageFilePath);
+
+                    prefEditor.apply();
                     showImageViewPreview.setImageBitmap(savedImageBitmap);
                     //todo vasilis add text recognition handling on saved image here
                     if(selectedModel.equals( TEXT_RECOGNITION_LATIN)
@@ -601,11 +640,23 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                     }
                     else if(textDetectBtn.isSelected() || documentDetectBtn.isSelected())
                     {
-                        hideTextBtn.setVisibility(View.VISIBLE);
-                        textview.setText(textFound);
-                        textview.setTextColor(getResources().getColor(R.color.blue));
-                        textview.setMovementMethod(new ScrollingMovementMethod());
-                        textview.setBackgroundColor(getResources().getColor(R.color.white));
+
+                        if(textFound!=null && textFound.length()>0)
+                        {
+                            hideTextBtn.setVisibility(View.VISIBLE);
+                            textview.setText(textFound);
+                            textview.setTextColor(getResources().getColor(R.color.blue));
+                            textview.setMovementMethod(new ScrollingMovementMethod());
+                            textview.setBackgroundColor(getResources().getColor(R.color.white));
+                        }
+                        else
+                        {
+                            Toast.makeText(CameraActivity.this,
+                                            "No text detected, please try again",
+                                            Toast.LENGTH_SHORT)
+                                    .show();
+                        }
+
                     }
                 }
             }
@@ -613,9 +664,11 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             @Override
             public void onError(@NonNull ImageCaptureException exception) {
                 Log.e("MainActivity", "Photo capture failed: " + exception.getMessage());
+                Toast.makeText(CameraActivity.this,
+                                "Photo capture failed: " + exception.getMessage(),
+                                Toast.LENGTH_SHORT)
+                        .show();
                 restoreTextView();
-
-
             }
         });
     }
@@ -660,15 +713,19 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         showImageViewPreview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                File latestImage = new File(imageFilePath);
-                if (!latestImage.exists())
-                    return;
+                if(imageFilePath!=null)
+                {
+                    File latestImage = new File(imageFilePath);
+                    if (!latestImage.exists())
+                        return;
 
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse(imageFilePath),
-                        "image/*");
-                startActivity(intent);
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.parse(imageFilePath),
+                            "image/*");
+                    startActivity(intent);
+                }
+
             }
         });
         flashBtn.setOnClickListener(new View.OnClickListener() {
@@ -704,7 +761,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             @Override
             public void onClick(View view) {
                 quickText = false;
-                Toast.makeText(CameraActivity.this,"Show info for selected function",Toast.LENGTH_SHORT).show();
+                Toast.makeText(CameraActivity.this,"Show info for selected function",
+                        Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -819,6 +877,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 zoomControls.setVisibility(View.VISIBLE);
                 blackwhite.setVisibility(View.VISIBLE);
                 deactivateOtherButtons(zoomBtn.getTag().toString());
+                selectedModel = ZOOM;
                 bindAnalysisUseCase();
                }
         });
@@ -999,6 +1058,29 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 camera.getCameraControl().enableTorch(false);
             }
         }
+        if(zoomBtn.isSelected())
+        {
+            // perform  setOnZoomInClickListener event on ZoomControls
+            zoomControls.setOnZoomInClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // add zoom in code here
+                    camera.getCameraControl().setLinearZoom(1.0f);
+                }
+            });
+            zoomControls.setOnZoomOutClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // add zoom in code here
+                    camera.getCameraControl().setLinearZoom(0f);
+                }
+            });
+        }
+        else
+        {
+            camera.getCameraControl().setLinearZoom(0f);
+        }
+
     }
     private void showSettingsActivity() {
         Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
@@ -1023,12 +1105,15 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
             switch (selectedModel) {
                 case OBJECT_DETECTION:
+                    bindPreviewUseCase();
                     Log.i(TAG, "Using Object Detector Processor");
                     ObjectDetectorOptions objectDetectorOptions =
                             PreferenceUtils.getObjectDetectorOptionsForLivePreview(this);
                     imageProcessor = new ObjectDetectorProcessor(this, objectDetectorOptions);
                     break;
                 case OBJECT_DETECTION_CUSTOM:
+                    bindPreviewUseCase();
+
                     Log.i(TAG, "Using Custom Object Detector Processor");
                     LocalModel localModel =
                             new LocalModel.Builder()
@@ -1039,6 +1124,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                     imageProcessor = new ObjectDetectorProcessor(this, customObjectDetectorOptions);
                     break;
                 case CUSTOM_AUTOML_OBJECT_DETECTION:
+                    bindPreviewUseCase();
+
                     Log.i(TAG, "Using Custom AutoML Object Detector Processor");
                     LocalModel customAutoMLODTLocalModel =
                             new LocalModel.Builder().setAssetManifestFilePath("automl/manifest.json").build();
@@ -1048,21 +1135,29 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                     imageProcessor = new ObjectDetectorProcessor(this, customAutoMLODTOptions);
                     break;
                 case TEXT_RECOGNITION_LATIN:
+                    bindPreviewUseCase();
+
                     Log.i(TAG, "Using on-device Text recognition Processor for Latin.");
                     imageProcessor =
                             new TextRecognitionProcessor(this,
                                     new TextRecognizerOptions.Builder().build());
                     break;
                 case FACE_DETECTION:
+                    bindPreviewUseCase();
+
                     Log.i(TAG, "Using Face Detector Processor");
                     imageProcessor = new FaceDetectorProcessor(this);
                     break;
 
                 case IMAGE_LABELING:
+                    bindPreviewUseCase();
+
                     Log.i(TAG, "Using Image Label Detector Processor");
                     imageProcessor = new LabelDetectorProcessor(this, ImageLabelerOptions.DEFAULT_OPTIONS);
                     break;
                 case IMAGE_LABELING_CUSTOM:
+                    bindPreviewUseCase();
+
                     Log.i(TAG, "Using Custom Image Label (Birds) Detector Processor");
                     LocalModel localClassifier =
                             new LocalModel.Builder()
@@ -1073,6 +1168,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                     imageProcessor = new LabelDetectorProcessor(this, customImageLabelerOptions);
                     break;
                 case CUSTOM_AUTOML_LABELING:
+                    bindPreviewUseCase();
+
                     Log.i(TAG, "Using Custom AutoML Image Label Detector Processor");
                     LocalModel customAutoMLLabelLocalModel =
                             new LocalModel.Builder().setAssetManifestFilePath("automl/manifest.json").build();
@@ -1083,6 +1180,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                     imageProcessor = new LabelDetectorProcessor(this, customAutoMLLabelOptions);
                     break;
                 case POSE_DETECTION:
+                    bindPreviewUseCase();
+
                     PoseDetectorOptionsBase poseDetectorOptions =
                             PreferenceUtils.getPoseDetectorOptionsForLivePreview(this);
                     boolean shouldShowInFrameLikelihood =
@@ -1100,7 +1199,12 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                                     runClassification,
                                     /* isStreamMode = */  true);
                     break;
+                case ZOOM:
+                    Log.i(TAG, "Zoom mode on.");
+                    zoomControls.setVisibility(View.VISIBLE);
+                    bindPreviewUseCase();
 
+                    break;
                 default:
                     throw new IllegalStateException("Invalid model name");
             }
@@ -1152,10 +1256,19 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
 
     }
+
+    private void hideZoomControls() {
+        // perform  setOnZoomInClickListener event on ZoomControls
+        zoomControls.setVisibility(View.GONE);
+    }
+
     @Override
     public void onResume() {
         super.onResume();
         bindAllCameraUseCases();
+        if (savedImageBitmap != null) {
+            showImageViewPreview.setImageBitmap(savedImageBitmap);
+        }
     }
     @Override
     protected void onPause() {
@@ -1176,20 +1289,26 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(grantResults.length>0)
         {
-            if(checkHasCameraPermission(CameraActivity.this) && checkHasWritgeExternalStoragePermission(CameraActivity.this))
+            if(checkHasCameraPermission(CameraActivity.this)
+                    && checkHasWritgeExternalStoragePermission(CameraActivity.this))
             {
               // getCameraInstance();
 
             }
             else
             {
-                Toast.makeText(this,"Permission Not Granted",Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,"Permission Not Granted",Toast.LENGTH_LONG).show();
                 requestCameraPermission();
             }
         }
 
     }
-
+/*    @Override
+    protected void onSaveInstanceState(@NonNull Bundle bundle) {
+        super.onSaveInstanceState(bundle);
+        bundle.putString(STATE_SELECTED_MODEL, selectedModel);
+        bundle.putString(STATE_SELECTED_MODEL, selectedModel);
+    }*/
     /**
      * Creates a camera permission request
      */
