@@ -142,7 +142,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private Button zoomBtn, textDetectBtn,
             quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
             colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,
-            button_switch_camera, button_savenote;
+            button_switch_camera, button_savenote, hideTextBtn;
     private ImageView flashBtn, info, blackwhite,settingsBtn;
     ImageView showImageView,showImageViewPreview;
     private CameraActivityViewModel mViewModel;
@@ -504,6 +504,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
         showImageView = findViewById(R.id.showImageView);
         button_savenote = findViewById(R.id.button_savenote);
+        hideTextBtn = findViewById(R.id.hideTextBtn);
         showImageViewPreview =  findViewById(R.id.showImageViewPreview);
         //zoom controls
         zoomControls = (ZoomControls) findViewById(R.id.CAMERA_ZOOM_CONTROLS);
@@ -563,6 +564,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         }*/
     }
     private void takePhoto() {
+        restoreTextView();
         Toast.makeText(CameraActivity.this,
                         context.getString(R.string.savingPleaseWait),
                         Toast.LENGTH_SHORT).show();
@@ -586,8 +588,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                                     msg, Toast.LENGTH_LONG)
                             .show();
                     showImageViewPreview.setImageBitmap(savedImageBitmap);
-                    //todo vasilis add text recognition handling on saved image
-                    //here
+                    //todo vasilis add text recognition handling on saved image here
                     if(selectedModel.equals( TEXT_RECOGNITION_LATIN)
                         && !quickText)
                     tryReloadAndDetectInImage(savedImageBitmap);
@@ -600,8 +601,11 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                     }
                     else if(textDetectBtn.isSelected() || documentDetectBtn.isSelected())
                     {
+                        hideTextBtn.setVisibility(View.VISIBLE);
                         textview.setText(textFound);
+                        textview.setTextColor(getResources().getColor(R.color.blue));
                         textview.setMovementMethod(new ScrollingMovementMethod());
+                        textview.setBackgroundColor(getResources().getColor(R.color.white));
                     }
                 }
             }
@@ -609,8 +613,19 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             @Override
             public void onError(@NonNull ImageCaptureException exception) {
                 Log.e("MainActivity", "Photo capture failed: " + exception.getMessage());
+                restoreTextView();
+
+
             }
         });
+    }
+
+    private void restoreTextView() {
+        hideTextBtn.setVisibility(View.GONE);
+        textview.setText(getString(R.string.resultTextDefault));
+        textview.setTextColor(getResources().getColor(R.color.white));
+        textview.setMovementMethod(new ScrollingMovementMethod());
+        textview.setBackgroundColor(getResources().getColor(R.color.transp));
     }
 
     private File getOutputDirectory() {
@@ -636,6 +651,12 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     }
 
     private void setListeners() {
+        hideTextBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                restoreTextView();
+            }
+        });
         showImageViewPreview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -987,6 +1008,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
 
     private void bindAnalysisUseCase() {
+        restoreTextView();
         if (cameraProvider == null) {
             return;
         }

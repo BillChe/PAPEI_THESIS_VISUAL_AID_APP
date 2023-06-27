@@ -37,6 +37,11 @@
 
     <string name="zoomControlBtn"> zoom controls Button</string>
     <string name="savingPleaseWait">Saving… Please wait</string>
+    <string name="hideTextBtn">Hide Text</string>
+    <string name="resultTextDefault">Your result will appear here</string>
+
+
+
 
 
 
