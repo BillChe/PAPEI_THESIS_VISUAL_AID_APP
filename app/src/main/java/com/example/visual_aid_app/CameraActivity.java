@@ -139,7 +139,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     public static final int CAMERA_FACING_BACK = 0;
     public static final int CAMERA_FACING_FRONT = 1;
     private final int cameraPermissionID = 101;
-    int currentZoomLevel = 0, maxZoomLevel = 0;
+    float currentZoomLevel = 0f, maxZoomLevel = 1.0f;
     boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn, textDetection, negativeCam;
     private Button zoomBtn, textDetectBtn,
             quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
@@ -193,6 +193,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     public static boolean quickText;
     Bitmap savedImageBitmap;
     String new_Date = "";
+    //zoom values
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -1065,14 +1067,33 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 @Override
                 public void onClick(View v) {
                     // add zoom in code here
-                    camera.getCameraControl().setLinearZoom(1.0f);
+                    currentZoomLevel += 0.3f;
+                    if(currentZoomLevel<=maxZoomLevel)
+                    {
+                        camera.getCameraControl().setLinearZoom(currentZoomLevel);
+                    }
+                    else
+                    {
+                        camera.getCameraControl().setLinearZoom(1.0f);
+                    }
+
+
                 }
             });
             zoomControls.setOnZoomOutClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     // add zoom in code here
-                    camera.getCameraControl().setLinearZoom(0f);
+                    currentZoomLevel -= 0.3f;
+                    if(currentZoomLevel>0f)
+                    {
+                        camera.getCameraControl().setLinearZoom(currentZoomLevel);
+                    }
+                    else
+                    {
+                        camera.getCameraControl().setLinearZoom(0f);
+                    }
+
                 }
             });
         }
