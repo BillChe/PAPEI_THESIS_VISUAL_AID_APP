@@ -1,11 +1,8 @@
 package com.example.visual_aid_app;
 
-import static android.content.ContentValues.TAG;
-
 import static com.example.visual_aid_app.textdetector.TextGraphic.textFound;
 import static com.example.visual_aid_app.utils.Util.checkHasCameraPermission;
 import static com.example.visual_aid_app.utils.Util.checkHasWritgeExternalStoragePermission;
-import static com.example.visual_aid_app.ZoomActivity.decodeStrem;
 import static com.example.visual_aid_app.ZoomActivity.rotateImage;
 
 import static java.lang.Math.max;
@@ -13,6 +10,7 @@ import static java.lang.Math.max;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.camera.core.CameraInfoUnavailableException;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
@@ -23,49 +21,41 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.res.AssetFileDescriptor;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
-import android.graphics.PointF;
 import android.graphics.Rect;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.util.Pair;
 import android.util.Size;
-import android.util.SparseArray;
-import android.view.Surface;
-import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.accessibility.AccessibilityManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ZoomControls;
 
 
-import com.example.visual_aid_app.camera_utils.BitmapUtils;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.camera_utils.VisionImageProcessor;
 import com.example.visual_aid_app.databinding.ActivityCameraBinding;
@@ -78,30 +68,13 @@ import com.example.visual_aid_app.preference.SettingsActivity;
 
 import com.example.visual_aid_app.textdetector.TextRecognitionProcessor;
 import com.example.visual_aid_app.utils.ColorFinder;
-import com.example.visual_aid_app.utils.Util;
-import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.vision.CameraSource;
-import com.google.android.gms.vision.Detector;
-import com.google.android.gms.vision.text.TextBlock;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import com.google.mlkit.common.MlKitException;
 import com.google.mlkit.common.model.LocalModel;
 import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.face.Face;
-import com.google.mlkit.vision.face.FaceDetection;
-import com.google.mlkit.vision.face.FaceDetector;
-import com.google.mlkit.vision.face.FaceDetectorOptions;
-import com.google.mlkit.vision.face.FaceLandmark;
 import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions;
 import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
@@ -113,14 +86,11 @@ import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutionException;
+
 import androidx.camera.core.Camera;
 
 public class CameraActivity extends AppCompatActivity {
@@ -141,16 +111,17 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private final int cameraPermissionID = 101;
     float currentZoomLevel = 0f, maxZoomLevel = 1.0f;
     boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn, textDetection, negativeCam;
-    private Button zoomBtn, textDetectBtn,
+    private AppCompatButton zoomBtn, textDetectBtn,
             quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
             colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,
             button_switch_camera, button_savenote, hideTextBtn;
     private ImageView flashBtn, info, blackwhite,settingsBtn;
     ImageView showImageView,showImageViewPreview;
+    HorizontalScrollView functionsMenu;
     private CameraActivityViewModel mViewModel;
     ActivityCameraBinding binding;
     Context context;
-    List <Button> buttonFunctionsList;
+    List <AppCompatButton> buttonFunctionsList;
     private TextToSpeech textToSpeech;
     private int activeCamera = CAMERA_FACING_BACK;
     private EditText noteET;
@@ -195,6 +166,10 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     String new_Date = "";
     //zoom values
 
+    //accessibility options
+    boolean isAccessibilityEnabled;
+    boolean restoreAfterAccessibilityDisabled;
+    AccessibilityManager accessibilityManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -282,7 +257,29 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         }
         imageCapture = new ImageCapture.Builder().build();
 
+    }
 
+    private void setAlternativeButtonViews() {
+        for(int i = 0; i < buttonFunctionsList.size();i++)
+        {
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(100, 100);
+
+            layoutParams.setMargins(8,8,8,60);
+            buttonFunctionsList.get(i).setLayoutParams(layoutParams);
+            buttonFunctionsList.get(i).setText("");
+        }
+        functionsMenu.setBackgroundColor(getResources().getColor(R.color.white));
+        //set icons as backgound
+        zoomBtn.setBackground(getResources().getDrawable(R.drawable.zoom_icon));
+
+        textDetectBtn.setBackground(getResources().getDrawable(R.drawable.ic_text_rec));
+        quickTextDetectBtn .setBackground(getResources().getDrawable(R.drawable.ic_scan_text));
+        documentDetectBtn.setBackground(getResources().getDrawable(R.drawable.ic_doc_text));
+        faceDetectionBtn.setBackground(getResources().getDrawable(R.drawable.ic_face_recognition));
+        colorRecognitionBtn.setBackground(getResources().getDrawable(R.drawable.ic_color_mode));
+        lightFunctionBtn.setBackground(getResources().getDrawable(R.drawable.ic_torch));
+        imageDescriptionBtn.setBackground(getResources().getDrawable(R.drawable.ic_image_description));
+        noteFunctionBtn.setBackground(getResources().getDrawable(R.drawable.ic_note));
     }
 
     private void updateshowImageViewPreview() {
@@ -301,7 +298,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         }
     }
 
-    private void fillButtonList(List<Button> buttonFunctionsList) {
+    private void fillButtonList(List<AppCompatButton> buttonFunctionsList) {
         buttonFunctionsList.add(textDetectBtn);
         buttonFunctionsList.add(quickTextDetectBtn);
         buttonFunctionsList.add(documentDetectBtn);
@@ -528,7 +525,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
 
     private void setViews() {
         //bottom buttons
-        captureButton = (Button) findViewById(R.id.button_capture);
+        captureButton = findViewById(R.id.button_capture);
         button_switch_camera = findViewById(R.id.button_switch_camera);
         mCameraView = findViewById(R.id.surfaceView);
         flashBtn = findViewById(R.id.flashBtn);
@@ -543,6 +540,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         //zoom controls
         zoomControls = (ZoomControls) findViewById(R.id.CAMERA_ZOOM_CONTROLS);
         //function buttons
+        functionsMenu = findViewById(R.id.functionsMenu);
         zoomBtn = findViewById(R.id.zoomBtn);
         textDetectBtn = findViewById(R.id.textDetectBtn);
         quickTextDetectBtn = findViewById(R.id.quickTextDetectBtn);
@@ -1290,6 +1288,22 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         if (savedImageBitmap != null) {
             showImageViewPreview.setImageBitmap(savedImageBitmap);
         }
+
+        //handle accessibility manager changes to restore UI and layout
+        accessibilityManager = (AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE);
+        isAccessibilityEnabled = accessibilityManager.isEnabled();
+        if(isAccessibilityEnabled)
+        {
+            setAlternativeButtonViews();
+            restoreAfterAccessibilityDisabled = true;
+        }
+        else if( restoreAfterAccessibilityDisabled)
+        {
+            restoreAfterAccessibilityDisabled = false;
+            recreate();
+        }
+
+
     }
     @Override
     protected void onPause() {
