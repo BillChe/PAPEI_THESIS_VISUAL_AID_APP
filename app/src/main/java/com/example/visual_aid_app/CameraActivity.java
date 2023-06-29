@@ -115,7 +115,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
             colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,
             button_switch_camera, button_savenote, hideTextBtn;
-    private ImageView flashBtn, info, blackwhite,settingsBtn;
+    private AppCompatButton flashBtn, info, blackwhite,settingsBtn;
     ImageView showImageView,showImageViewPreview;
     HorizontalScrollView functionsMenu;
     private CameraActivityViewModel mViewModel;
@@ -657,6 +657,10 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                                     .show();
                         }
 
+                    }
+                    else if(lightFunctionBtn.isSelected())
+                    {
+                        tryReloadAndDetectInImage(savedImageBitmap);
                     }
                 }
             }

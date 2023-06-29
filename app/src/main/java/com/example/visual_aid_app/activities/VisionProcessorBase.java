@@ -41,7 +41,7 @@ import com.example.visual_aid_app.camera_utils.FrameMetadata;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.camera_utils.InferenceInfoGraphic;
 import com.example.visual_aid_app.camera_utils.ScopedExecutor;
-import com.example.visual_aid_app.camera_utils.TemperatureMonitor;
+import com.example.visual_aid_app.camera_utils.LightMonitor;
 import com.example.visual_aid_app.camera_utils.VisionImageProcessor;
 import com.example.visual_aid_app.preference.PreferenceUtils;
 import com.google.android.gms.tasks.Task;
@@ -74,7 +74,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
   private final ActivityManager activityManager;
   private final Timer fpsTimer = new Timer();
   private final ScopedExecutor executor;
-  private final TemperatureMonitor temperatureMonitor;
+  private final LightMonitor lightMonitor;
 
   // Whether this processor is already shut down
   private boolean isShutdown;
@@ -118,7 +118,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
         },
         /* delay= */ 0,
         /* period= */ 1000);
-    temperatureMonitor = new TemperatureMonitor(context);
+    lightMonitor = new LightMonitor(context);
   }
 
   // -----------------Code for processing single still image----------------------------------------
@@ -330,7 +330,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
                 activityManager.getMemoryInfo(mi);
                 long availableMegs = mi.availMem / 0x100000L;
                 Log.d(TAG, "Memory available in system: " + availableMegs + " MB");
-                temperatureMonitor.logTemperature();
+                lightMonitor.logTemperature();
               }
 
               graphicOverlay.clear();
@@ -371,7 +371,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
     isShutdown = true;
     resetLatencyStats();
     fpsTimer.cancel();
-    temperatureMonitor.stop();
+    lightMonitor.stop();
   }
 
   private void resetLatencyStats() {

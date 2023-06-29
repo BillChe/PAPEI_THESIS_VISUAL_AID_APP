@@ -21,7 +21,7 @@ android:layout_height="match_parent">
     android:gravity="center_vertical"
     android:background="@color/blue">
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/flashBtn"
         android:background="@drawable/flash_on_icon"
         android:textAllCaps="false"
@@ -32,9 +32,9 @@ android:layout_height="match_parent">
         android:contentDescription="@string/flashBtn"
 
     >
-    </ImageView>
+    </androidx.appcompat.widget.AppCompatButton>
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/blackwhite"
         android:background="@drawable/ic_black_white"
         android:textAllCaps="false"
@@ -43,9 +43,9 @@ android:layout_height="match_parent">
         android:backgroundTint="@color/white"
         android:layout_margin="2dp"
         android:contentDescription="@string/blackwhiteBtn">
-    </ImageView>
+    </androidx.appcompat.widget.AppCompatButton>
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/info"
         android:background="@drawable/info"
         android:textAllCaps="false"
@@ -54,14 +54,14 @@ android:layout_height="match_parent">
         android:backgroundTint="@color/white"
         android:layout_margin="2dp"
         android:contentDescription="@string/infoBtn">
-    </ImageView>
+    </androidx.appcompat.widget.AppCompatButton>
 
     <Space
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/settingsBtn"
         android:background="@drawable/ic_settings_white_24dp"
         android:textAllCaps="false"
@@ -70,7 +70,7 @@ android:layout_height="match_parent">
         android:backgroundTint="@color/white"
         android:layout_margin="2dp"
         android:contentDescription="@string/settingsBtn">
-    </ImageView>
+    </androidx.appcompat.widget.AppCompatButton>
 
 </LinearLayout>
     <ScrollView
