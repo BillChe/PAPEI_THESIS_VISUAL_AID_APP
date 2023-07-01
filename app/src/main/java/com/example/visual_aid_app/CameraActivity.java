@@ -320,6 +320,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 buttonFunctionsList.get(i).setSelected(false);
             }
         }
+        textview.setVisibility(View.VISIBLE);
         //hide note text view
         if(!tag.equals(noteFunctionBtn.getTag()))
         {
@@ -333,10 +334,26 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         {
             hideZoomControls();
         }
+        else if(zoomBtn.isSelected() || noteFunctionBtn.isSelected())
+        {
+            textview.setVisibility(View.GONE);
+        }
+
+
+        if(faceDetectionBtn.isSelected())
+        {
+            button_switch_camera.setVisibility(View.VISIBLE);
+        }
         else
         {
+            button_switch_camera.setVisibility(View.GONE);
 
         }
+    /*    if(blackwhite.isSelected())
+        {
+
+        }*/
+
     }
 
     /*private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
@@ -512,9 +529,12 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             @Override
             public void onCompleted(String color) {
                 Log.e("CameraActivity", "Color found: " + color);
-
+/*
                 Toast.makeText(CameraActivity.this, "Your Color : " + color, Toast.LENGTH_LONG).show();
+*/
+                textview.setText("Color found: " + color);
             }
+
         }).findDominantColor(imageBitmap);
     }
 
@@ -636,6 +656,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                     {
                         savedImageBitmap = rotateImage(savedImageBitmap, imageFilePath);
 
+                        restoreTextView();
                         detectColor(savedImageBitmap);
                     }
                     else if(textDetectBtn.isSelected() || documentDetectBtn.isSelected())
@@ -892,6 +913,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 if(!negativeCam)
                 {
                     negativeCam = true;
+                    mCameraView.setAlpha(1.0f);
                   /*  parameters = camera.getParameters();
                     parameters.setColorEffect(Camera.Parameters.EFFECT_NEGATIVE);
                     camera.setParameters(parameters);*/
@@ -917,6 +939,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 quickText = false;
                 negativeCam = false;
                 textDetection = false;
+                hideZoomControls();
                 colorRecognitionBtn.setSelected(true);
                 deactivateOtherButtons(colorRecognitionBtn.getTag().toString());
                 bindAnalysisUseCase();

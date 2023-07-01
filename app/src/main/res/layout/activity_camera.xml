@@ -365,13 +365,14 @@ android:layout_height="match_parent">
             android:backgroundTint="@color/blue"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
-            android:contentDescription="@string/zoomFunctionBtn">
+            android:contentDescription="@string/zoomFunctionBtn"
+            android:visibility="gone">
         </androidx.appcompat.widget.AppCompatButton>
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/button_capture"
             android:textAllCaps="false"
-            android:layout_width="60dp"
+            android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_gravity="center"
             android:background="@drawable/camera_take_pic_icon"
@@ -390,7 +391,8 @@ android:layout_height="match_parent">
             android:backgroundTint="@color/blue"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
-            android:contentDescription="@string/switch_camera_button"/>
+            android:contentDescription="@string/switch_camera_button"
+            android:visibility="gone"/>
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/button_savenote"
