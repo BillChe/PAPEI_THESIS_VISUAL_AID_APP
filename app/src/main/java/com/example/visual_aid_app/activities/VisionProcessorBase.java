@@ -26,6 +26,7 @@ import android.graphics.Bitmap;
 import android.os.Build.VERSION_CODES;
 import android.os.SystemClock;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.GuardedBy;
@@ -74,7 +75,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
   private final ActivityManager activityManager;
   private final Timer fpsTimer = new Timer();
   private final ScopedExecutor executor;
-  private final LightMonitor lightMonitor;
+  private LightMonitor lightMonitor;
 
   // Whether this processor is already shut down
   private boolean isShutdown;
@@ -118,7 +119,22 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
         },
         /* delay= */ 0,
         /* period= */ 1000);
-    lightMonitor = new LightMonitor(context);
+    //lightMonitor = new LightMonitor(context);
+  }
+  protected VisionProcessorBase(Context context, TextView textView) {
+    activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+    executor = new ScopedExecutor(TaskExecutors.MAIN_THREAD);
+    fpsTimer.scheduleAtFixedRate(
+            new TimerTask() {
+              @Override
+              public void run() {
+                framesPerSecond = frameProcessedInOneSecondInterval;
+                frameProcessedInOneSecondInterval = 0;
+              }
+            },
+            /* delay= */ 0,
+            /* period= */ 1000);
+    lightMonitor = new LightMonitor(context,textView);
   }
 
   // -----------------Code for processing single still image----------------------------------------
@@ -330,6 +346,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
                 activityManager.getMemoryInfo(mi);
                 long availableMegs = mi.availMem / 0x100000L;
                 Log.d(TAG, "Memory available in system: " + availableMegs + " MB");
+                if(lightMonitor!=null)
                 lightMonitor.logTemperature();
               }
 
@@ -371,6 +388,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
     isShutdown = true;
     resetLatencyStats();
     fpsTimer.cancel();
+    if(lightMonitor!=null)
     lightMonitor.stop();
   }
 

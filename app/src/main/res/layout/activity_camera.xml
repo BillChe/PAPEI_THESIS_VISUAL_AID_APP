@@ -35,6 +35,7 @@ android:layout_height="match_parent">
     </androidx.appcompat.widget.AppCompatButton>
 
     <androidx.appcompat.widget.AppCompatButton
+        android:visibility="gone"
         android:id="@+id/blackwhite"
         android:background="@drawable/ic_black_white"
         android:textAllCaps="false"
@@ -391,10 +392,10 @@ android:layout_height="match_parent">
             android:backgroundTint="@color/blue"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
-            android:contentDescription="@string/switch_camera_button"
-            android:visibility="gone"/>
+            android:contentDescription="@string/switch_camera_button" />
 
         <androidx.appcompat.widget.AppCompatButton
+            android:visibility="gone"
             android:id="@+id/button_savenote"
             android:textAllCaps="false"
             android:layout_width="50dp"

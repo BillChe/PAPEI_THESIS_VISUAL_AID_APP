@@ -41,10 +41,6 @@
     <string name="resultTextDefault">Your result will appear here</string>
 
 
-
-
-
-
     <!--MLKIT STRINGS-->
     <string name="java_entry_title" translatable="false">Run the ML Kit quickstart written in Java</string>
     <string name="kotlin_entry_title" translatable="false">Run the ML Kit quickstart written in Kotlin</string>

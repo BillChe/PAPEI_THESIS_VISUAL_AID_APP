@@ -1,11 +1,14 @@
 package com.example.visual_aid_app.camera_utils;
 
+import static com.example.visual_aid_app.CameraActivity.lightMonitorOn;
+
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashMap;
@@ -35,9 +38,12 @@ public final class LightMonitor implements SensorEventListener {
   float Bright_sunlight = 80.0f;
   float Direct_sunlight_in_tropical_areas = 90.0f;
 
-  public LightMonitor(Context context) {
+  TextView textView;
+  
+  public LightMonitor(Context context,TextView textView) {
     sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
     List<Sensor> allSensors = sensorManager.getSensorList(Sensor.TYPE_LIGHT);
+    this.textView = textView;
     for (Sensor sensor : allSensors) {
       // Assumes sensors with "temperature" substring in their names are temperature sensors.
       // Those sensors may measure the temperature of different parts of the device. It makes more
@@ -77,57 +83,71 @@ public final class LightMonitor implements SensorEventListener {
     float lightValue = sensorEvent.values[0];
     String lightValueText = "";
 
-    if (lightValue < Dark) {
-      // Dark image
-      lightValueText = "Dark";
-      Toast.makeText(context, "Dark image", Toast.LENGTH_SHORT).show();
-    }
-    else if(lightValue>=Dim) {
-      lightValueText = "Dim";
-      // Light image
-      Toast.makeText(context, "Dim image", Toast.LENGTH_SHORT).show();
-    }
-    else if(lightValue>=Lowindoorlight) {
-      lightValueText = "Lowindoorlight";
-      // Light image
-      Toast.makeText(context, "Lowindoorlight image", Toast.LENGTH_SHORT).show();
-    }
-    else if(lightValue>=averageLight) {
-      lightValueText = "averageLight";
-      // Light image
-      Toast.makeText(context, "averageLight image", Toast.LENGTH_SHORT).show();
-    }
-    else if(lightValue>=Well_lit_indoor_area) {
-      lightValueText = "Well_lit_indoor_area";
-      // Light image
-      Toast.makeText(context, "Well_lit_indoor_area image", Toast.LENGTH_SHORT).show();
-    }
-    else if(lightValue>=Bright_indoor_light) {
-      lightValueText = "Well_lit_indoor_area";
-      // Light image
-      Toast.makeText(context, "Bright_indoor_light image", Toast.LENGTH_SHORT).show();
-    }
-    else if(lightValue>=Overcast_daylight) {
-      lightValueText = "Overcast_daylight";
-      // Light image
-      Toast.makeText(context, "Overcast_daylight image", Toast.LENGTH_SHORT).show();
-    }
-    else if(lightValue>=Direct_sunlight_through_windows) {
-      lightValueText = "Direct_sunlight_through_windows";
-      // Light image
-      Toast.makeText(context, "Direct_sunlight_through_windows image", Toast.LENGTH_SHORT).show();
-    }
-    else if(lightValue>=Bright_sunlight) {
-      lightValueText = "Bright_sunlight";
-      // Light image
-      Toast.makeText(context, "Bright_sunlight image", Toast.LENGTH_SHORT).show();
-    }
-    else if(lightValue>=Direct_sunlight_in_tropical_areas) {
-      lightValueText = "Direct_sunlight_in_tropical_areas";
-      // Light image
-      Toast.makeText(context, "Direct_sunlight_in_tropical_areas image", Toast.LENGTH_SHORT).show();
+    if(lightMonitorOn)
+    {
+      if (lightValue < Dark) {
+        // Dark image
+        lightValueText = "Dark";
+       // Toast.makeText(context, "Dark image", Toast.LENGTH_SHORT).show();
+      }
+      else if(lightValue>=Dim) {
+        lightValueText = "Dim";
+        // Light image
+       // Toast.makeText(context, "Dim image", Toast.LENGTH_SHORT).show();
+
+      }
+      else if(lightValue>=Lowindoorlight) {
+        lightValueText = "Low indoor light";
+        // Light image
+       // Toast.makeText(context, "Lowindoorlight image", Toast.LENGTH_SHORT).show();
+
+      }
+      else if(lightValue>=averageLight) {
+        lightValueText = "Average light";
+        // Light image
+       // Toast.makeText(context, "averageLight image", Toast.LENGTH_SHORT).show();
+
+      }
+      else if(lightValue>=Well_lit_indoor_area) {
+        lightValueText = "Well lit indoor area";
+        // Light image
+        Toast.makeText(context, "Well_lit_indoor_area image", Toast.LENGTH_SHORT).show();
+
+      }
+      else if(lightValue>=Bright_indoor_light) {
+        lightValueText = "Bright indoor light";
+        // Light image
+      //  Toast.makeText(context, "Bright_indoor_light image", Toast.LENGTH_SHORT).show();
+
+      }
+      else if(lightValue>=Overcast_daylight) {
+        lightValueText = "Overcast daylight";
+        // Light image
+      //  Toast.makeText(context, "Overcast_daylight image", Toast.LENGTH_SHORT).show();
+
+      }
+      else if(lightValue>=Direct_sunlight_through_windows) {
+        lightValueText = "Direct sunlight through_windows";
+        // Light image
+       // Toast.makeText(context, "Direct_sunlight_through_windows image", Toast.LENGTH_SHORT).show();
+
+      }
+      else if(lightValue>=Bright_sunlight) {
+        lightValueText = "Bright sunlight";
+        // Light image
+       // Toast.makeText(context, "Bright_sunlight image", Toast.LENGTH_SHORT).show();
+
+      }
+      else if(lightValue>=Direct_sunlight_in_tropical_areas) {
+        lightValueText = "Direct sunlight in tropical areas";
+        // Light image
+       // Toast.makeText(context, "Direct_sunlight_in_tropical_areas image", Toast.LENGTH_SHORT).show();
+
+      }
+      textView.setText(lightValueText);
+
+      Log.i("lightValue", String.valueOf(lightValue) + "\n" + lightValueText);
     }
 
-    Log.i("lightValue", String.valueOf(lightValue) + "\n" + lightValueText);
   }
 }

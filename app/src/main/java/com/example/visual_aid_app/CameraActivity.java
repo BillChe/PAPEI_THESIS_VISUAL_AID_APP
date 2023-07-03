@@ -16,6 +16,7 @@ import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
@@ -56,6 +57,7 @@ import android.widget.Toast;
 import android.widget.ZoomControls;
 
 
+import com.example.visual_aid_app.activities.NoteActivity;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.camera_utils.VisionImageProcessor;
 import com.example.visual_aid_app.databinding.ActivityCameraBinding;
@@ -67,6 +69,7 @@ import com.example.visual_aid_app.preference.PreferenceUtils;
 import com.example.visual_aid_app.preference.SettingsActivity;
 
 import com.example.visual_aid_app.textdetector.TextRecognitionProcessor;
+import com.example.visual_aid_app.utils.ColorAnalyzer;
 import com.example.visual_aid_app.utils.ColorFinder;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -127,8 +130,10 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private EditText noteET;
 
     ApplicationInfo applicationInfo;
+    ImageProxy latestImageProxy;
 
     String applicationName = "";
+    private boolean autoSave = false;
     //ML Kit staff
     private static final String TAG = "CameraXLivePreview";
 
@@ -144,6 +149,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     private static final String POSE_DETECTION = "Pose Detection";
     private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
     private static final String ZOOM = "Zoom";
+    private static final String COLOR_RECOGNITION = "Color Recognition";
+    private static final String LIGHT_MONITOR = "Light Monitor";
     private static final String STATE_SELECTED_MODEL = "selected_model";
     private static final String LAST_IMAGE = "";
 
@@ -170,6 +177,8 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     boolean isAccessibilityEnabled;
     boolean restoreAfterAccessibilityDisabled;
     AccessibilityManager accessibilityManager;
+
+    public static boolean lightMonitorOn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -340,19 +349,15 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         }
 
 
-        if(faceDetectionBtn.isSelected())
+        if(lightFunctionBtn.isSelected())
         {
-            button_switch_camera.setVisibility(View.VISIBLE);
+
+            lightMonitorOn = true;
         }
         else
         {
-            button_switch_camera.setVisibility(View.GONE);
-
+            lightMonitorOn = false;
         }
-    /*    if(blackwhite.isSelected())
-        {
-
-        }*/
 
     }
 
@@ -617,86 +622,101 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     }
     private void takePhoto() {
         restoreTextView();
-        Toast.makeText(CameraActivity.this,
-                        context.getString(R.string.savingPleaseWait),
-                        Toast.LENGTH_SHORT).show();
-        File photoFile = getOutputDirectory();
+        if(!colorRecognitionBtn.isSelected())
+        {
+            Toast.makeText(CameraActivity.this,
+                    context.getString(R.string.savingPleaseWait),
+                    Toast.LENGTH_SHORT).show();
+            File photoFile = getOutputDirectory();
 
-        ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.
-                Builder(photoFile).build();
+            ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.
+                    Builder(photoFile).build();
 
-        imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this),
-                new ImageCapture.OnImageSavedCallback() {
-            @Override
-            public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                String msg = "Photo captured successfully: " + photoFile.getAbsolutePath();
-               // Toast.makeText(CameraActivity.this, msg, Toast.LENGTH_SHORT).show();
-                savedImageBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+            imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this),
+                    new ImageCapture.OnImageSavedCallback() {
+                        @Override
+                        public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                            String msg = "Photo captured successfully: " + photoFile.getAbsolutePath();
+                            // Toast.makeText(CameraActivity.this, msg, Toast.LENGTH_SHORT).show();
+                            savedImageBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
 
-                if (savedImageBitmap != null) {
-                    MediaStore.Images.Media.insertImage(getContentResolver(), savedImageBitmap,
-                            photoFile.getPath(),
-                            "image:" + new_Date);
-                    Toast.makeText(CameraActivity.this,
-                                    msg, Toast.LENGTH_LONG)
-                            .show();
-                    //save last file path of image taken in sharedPrefs
-                    SharedPreferences.Editor prefEditor =
-                            PreferenceManager.getDefaultSharedPreferences(context).edit();
-                    prefEditor.putString("imageFilePath", imageFilePath);
+                            if (savedImageBitmap != null) {
+                                MediaStore.Images.Media.insertImage(getContentResolver(), savedImageBitmap,
+                                        photoFile.getPath(),
+                                        "image:" + new_Date);
+                                Toast.makeText(CameraActivity.this,
+                                                msg, Toast.LENGTH_LONG)
+                                        .show();
+                                //save last file path of image taken in sharedPrefs
+                                SharedPreferences.Editor prefEditor =
+                                        PreferenceManager.getDefaultSharedPreferences(context).edit();
+                                prefEditor.putString("imageFilePath", imageFilePath);
 
-                    prefEditor.apply();
-                    showImageViewPreview.setImageBitmap(savedImageBitmap);
-                    //todo vasilis add text recognition handling on saved image here
-                    if(selectedModel.equals( TEXT_RECOGNITION_LATIN)
-                        && !quickText)
-                    tryReloadAndDetectInImage(savedImageBitmap);
+                                prefEditor.apply();
+                                showImageViewPreview.setImageBitmap(savedImageBitmap);
+                                //todo vasilis add text recognition handling on saved image here
+                                if(selectedModel.equals( TEXT_RECOGNITION_LATIN)
+                                        && !quickText)
+                                    tryReloadAndDetectInImage(savedImageBitmap);
 
-                    if(colorRecognitionBtn.isSelected())
-                    {
-                        savedImageBitmap = rotateImage(savedImageBitmap, imageFilePath);
+                                if(colorRecognitionBtn.isSelected())
+                                {
+                                    savedImageBitmap = rotateImage(savedImageBitmap, imageFilePath);
 
-                        restoreTextView();
-                        detectColor(savedImageBitmap);
-                    }
-                    else if(textDetectBtn.isSelected() || documentDetectBtn.isSelected())
-                    {
+                                    restoreTextView();
+                                    detectColor(savedImageBitmap);
 
-                        if(textFound!=null && textFound.length()>0)
-                        {
-                            hideTextBtn.setVisibility(View.VISIBLE);
-                            textview.setText(textFound);
-                            textview.setTextColor(getResources().getColor(R.color.blue));
-                            textview.setMovementMethod(new ScrollingMovementMethod());
-                            textview.setBackgroundColor(getResources().getColor(R.color.white));
+                                }
+                                else if(textDetectBtn.isSelected() || documentDetectBtn.isSelected())
+                                {
+
+                                    if(textFound!=null && textFound.length()>0)
+                                    {
+                                        hideTextBtn.setVisibility(View.VISIBLE);
+                                        textview.setText(textFound);
+                                        textview.setTextColor(getResources().getColor(R.color.blue));
+                                        textview.setMovementMethod(new ScrollingMovementMethod());
+                                        textview.setBackgroundColor(getResources().getColor(R.color.white));
+                                    }
+                                    else
+                                    {
+                                        Toast.makeText(CameraActivity.this,
+                                                        "No text detected, please try again",
+                                                        Toast.LENGTH_SHORT)
+                                                .show();
+                                    }
+
+                                }
+                                else if(lightFunctionBtn.isSelected())
+                                {
+
+                                    //tryReloadAndDetectInImage(savedImageBitmap);
+                                }
+                            }
                         }
-                        else
-                        {
+
+                        @Override
+                        public void onError(@NonNull ImageCaptureException exception) {
+                            Log.e("MainActivity", "Photo capture failed: " + exception.getMessage());
                             Toast.makeText(CameraActivity.this,
-                                            "No text detected, please try again",
+                                            "Photo capture failed: " + exception.getMessage(),
                                             Toast.LENGTH_SHORT)
                                     .show();
+                            restoreTextView();
                         }
-
-                    }
-                    else if(lightFunctionBtn.isSelected())
-                    {
-                        tryReloadAndDetectInImage(savedImageBitmap);
-                    }
-                }
+                    });
+        }
+        else
+        {
+            if(colorRecognitionBtn.isSelected())
+            {
+                bindAllCameraUseCases();
             }
+        }
 
-            @Override
-            public void onError(@NonNull ImageCaptureException exception) {
-                Log.e("MainActivity", "Photo capture failed: " + exception.getMessage());
-                Toast.makeText(CameraActivity.this,
-                                "Photo capture failed: " + exception.getMessage(),
-                                Toast.LENGTH_SHORT)
-                        .show();
-                restoreTextView();
-            }
-        });
     }
+
+
 
     private void restoreTextView() {
         hideTextBtn.setVisibility(View.GONE);
@@ -940,6 +960,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 negativeCam = false;
                 textDetection = false;
                 hideZoomControls();
+                selectedModel = COLOR_RECOGNITION;
                 colorRecognitionBtn.setSelected(true);
                 deactivateOtherButtons(colorRecognitionBtn.getTag().toString());
                 bindAnalysisUseCase();
@@ -949,6 +970,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         lightFunctionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                restoreTextView();
                 lightFunctionBtn.setSelected(true);
                 deactivateOtherButtons(lightFunctionBtn.getTag().toString());
                 activeCamera = CAMERA_FACING_BACK;
@@ -959,6 +981,9 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 quickText = false;
                 negativeCam = false;
                 textDetection = false;
+                selectedModel = LIGHT_MONITOR;
+                bindAnalysisUseCase();
+
             }
         });
         imageDescriptionBtn.setOnClickListener(new View.OnClickListener() {
@@ -1000,18 +1025,20 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         noteFunctionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                noteFunctionBtn.setSelected(true);
+            /*    noteFunctionBtn.setSelected(true);
                 deactivateOtherButtons(noteFunctionBtn.getTag().toString());
                 activeCamera = CAMERA_FACING_BACK;
-             /*   mViewModel.setFaceDetectOn(false);
+             *//*   mViewModel.setFaceDetectOn(false);
                 mViewModel.setTextDetection(false);
                 mViewModel.setZoomOn(false);
                 negativeCam = false;
-                textDetection = false;*/
+                textDetection = false;*//*
                 //noteET.setVisibility(View.VISIBLE);
                 button_savenote.setEnabled(true);
-                quickText = false;
-               /* mViewModel.setNoteOn(true);*/
+                quickText = false;*/
+                Intent takeNote = new Intent(CameraActivity.this, NoteActivity.class);
+                startActivity(takeNote);
+                /* mViewModel.setNoteOn(true);*/
 
             }
         });
@@ -1251,6 +1278,20 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                     bindPreviewUseCase();
 
                     break;
+                case COLOR_RECOGNITION:
+                    Log.i(TAG, "Color Recognition mode on.");
+                    zoomControls.setVisibility(View.GONE);
+                    bindPreviewUseCase();
+
+                    break;
+                case LIGHT_MONITOR:
+                    Log.i(TAG, "LIGHT_MONITOR mode on.");
+                    imageProcessor =
+                            new TextRecognitionProcessor(this,textview);
+                    bindPreviewUseCase();
+
+                    break;
+
                 default:
                     throw new IllegalStateException("Invalid model name");
             }
@@ -1272,31 +1313,48 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
         analysisUseCase = builder.build();
 
         needUpdateGraphicOverlayImageSourceInfo = true;
-        analysisUseCase.setAnalyzer(
-                // imageProcessor.processImageProxy will use another thread to run the detection underneath,
-                // thus we can just runs the analyzer itself on main thread.
-                ContextCompat.getMainExecutor(this),
-                imageProxy -> {
-                    if (needUpdateGraphicOverlayImageSourceInfo) {
-                        boolean isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT;
-                        int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
-                        if (rotationDegrees == 0 || rotationDegrees == 180) {
-                            graphicOverlay.setImageSourceInfo(
-                                    imageProxy.getWidth(), imageProxy.getHeight(), isImageFlipped);
-                        } else {
-                            graphicOverlay.setImageSourceInfo(
-                                    imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
+        //todo vasilis add color Analyzer
+
+        if(colorRecognitionBtn.isSelected())
+        {
+            analysisUseCase.setAnalyzer(
+                    // imageProcessor.processImageProxy will use another thread to run the detection underneath,
+                    // thus we can just runs the analyzer itself on main thread.
+                    ContextCompat.getMainExecutor(this),new ColorAnalyzer(CameraActivity.this,textview));
+        }
+        else {
+            analysisUseCase.setAnalyzer(
+                    // imageProcessor.processImageProxy will use another thread to run the detection underneath,
+                    // thus we can just runs the analyzer itself on main thread.
+                    ContextCompat.getMainExecutor(this),
+                    imageProxy -> {
+                        if (needUpdateGraphicOverlayImageSourceInfo) {
+                            boolean isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT;
+                            int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+                            if (rotationDegrees == 0 || rotationDegrees == 180) {
+                                graphicOverlay.setImageSourceInfo(
+                                        imageProxy.getWidth(), imageProxy.getHeight(), isImageFlipped);
+                            } else {
+                                graphicOverlay.setImageSourceInfo(
+                                        imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
+                            }
+                            needUpdateGraphicOverlayImageSourceInfo = false;
                         }
-                        needUpdateGraphicOverlayImageSourceInfo = false;
-                    }
-                    try {
-                        imageProcessor.processImageProxy(imageProxy, graphicOverlay);
-                    } catch (MlKitException e) {
-                        Log.e(TAG, "Failed to process image. Error: " + e.getLocalizedMessage());
-                        Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT)
-                                .show();
-                    }
-                });
+                        try {
+                            if(!lightMonitorOn)
+                            {
+                                imageProcessor.processImageProxy(imageProxy, graphicOverlay);
+                                latestImageProxy = imageProxy;
+                            }
+
+                        } catch (MlKitException e) {
+                            Log.e(TAG, "Failed to process image. Error: " + e.getLocalizedMessage());
+                            Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT)
+                                    .show();
+                        }
+                    });
+        }
+
 
         cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, analysisUseCase);
 

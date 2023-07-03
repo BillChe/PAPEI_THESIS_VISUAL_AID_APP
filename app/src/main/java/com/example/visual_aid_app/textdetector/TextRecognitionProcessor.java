@@ -16,9 +16,12 @@
 
 package com.example.visual_aid_app.textdetector;
 
+import static com.example.visual_aid_app.CameraActivity.lightMonitorOn;
+
 import android.content.Context;
 import android.graphics.Point;
 import android.util.Log;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
@@ -45,6 +48,7 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
   private final Boolean shouldGroupRecognizedTextInBlocks;
   private final Boolean showLanguageTag;
   private final boolean showConfidence;
+  TextView textView;
 
   public TextRecognitionProcessor(
       Context context, TextRecognizerOptionsInterface textRecognizerOptions) {
@@ -54,10 +58,18 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
     showConfidence = PreferenceUtils.shouldShowTextConfidence(context);
     textRecognizer = TextRecognition.getClient(textRecognizerOptions);
   }
-
+  public TextRecognitionProcessor(
+          Context context,TextView textView) {
+    super(context,textView);
+    shouldGroupRecognizedTextInBlocks = false;
+    showLanguageTag = false;
+    showConfidence = false;
+    textRecognizer = null;
+  }
   @Override
   public void stop() {
     super.stop();
+    if(textRecognizer!=null)
     textRecognizer.close();
   }
 
@@ -68,15 +80,20 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
 
   @Override
   protected void onSuccess(@NonNull Text text, @NonNull GraphicOverlay graphicOverlay) {
-    Log.d(TAG, "On-device Text detection successful");
-    logExtrasForTesting(text);
-    graphicOverlay.add(
-        new TextGraphic(
-            graphicOverlay,
-            text,
-            shouldGroupRecognizedTextInBlocks,
-            showLanguageTag,
-            showConfidence));
+
+    if(!lightMonitorOn)
+    {
+      Log.d(TAG, "On-device Text detection successful");
+      logExtrasForTesting(text);
+      graphicOverlay.add(
+              new TextGraphic(
+                      graphicOverlay,
+                      text,
+                      shouldGroupRecognizedTextInBlocks,
+                      showLanguageTag,
+                      showConfidence));
+    }
+
   }
 
   private static void logExtrasForTesting(Text text) {
