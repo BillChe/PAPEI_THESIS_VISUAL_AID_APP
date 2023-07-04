@@ -50,11 +50,9 @@ public final class LightMonitor implements SensorEventListener {
       // sense to track the change of themselves, e.g. compare the reading before and after running
       // a detector for a certain amount of time, rather than relying on their absolute values at a
       // certain time.
-    /*  if (sensor.getName().toLowerCase().contains("temperature")) {*/
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
 
         this.context = context;
-     /* }*/
     }
   }
 
@@ -88,62 +86,36 @@ public final class LightMonitor implements SensorEventListener {
       if (lightValue < Dim && lightValue >= Dark) {
         // Dark image
         lightValueText = "Dark";
-       // Toast.makeText(context, "Dark image", Toast.LENGTH_SHORT).show();
       }
       else if(lightValue >= Dim && lightValue<Lowindoorlight) {
         lightValueText = "Dim";
-        // Light image
-       // Toast.makeText(context, "Dim image", Toast.LENGTH_SHORT).show();
-
       }
       else if(lightValue >= Lowindoorlight && lightValue<averageLight) {
         lightValueText = "Low indoor light";
-        // Light image
-       // Toast.makeText(context, "Lowindoorlight image", Toast.LENGTH_SHORT).show();
-
       }
       else if(lightValue>=averageLight && lightValue < Well_lit_indoor_area) {
         lightValueText = "Average light";
-        // Light image
-       // Toast.makeText(context, "averageLight image", Toast.LENGTH_SHORT).show();
-
       }
       else if(lightValue>=Well_lit_indoor_area && lightValue < Bright_indoor_light) {
         lightValueText = "Well lit indoor area";
-        // Light image
-        //Toast.makeText(context, "Well_lit_indoor_area image", Toast.LENGTH_SHORT).show();
 
       }
       else if(lightValue>=Bright_indoor_light && lightValue < Overcast_daylight) {
         lightValueText = "Bright indoor light";
-        // Light image
-      //  Toast.makeText(context, "Bright_indoor_light image", Toast.LENGTH_SHORT).show();
-
       }
       else if(lightValue>=Overcast_daylight && lightValue < Direct_sunlight_through_windows) {
         lightValueText = "Overcast daylight";
-        // Light image
-      //  Toast.makeText(context, "Overcast_daylight image", Toast.LENGTH_SHORT).show();
-
       }
       else if(lightValue>=Direct_sunlight_through_windows && lightValue < Bright_sunlight) {
         lightValueText = "Direct sunlight through windows";
-        // Light image
-       // Toast.makeText(context, "Direct_sunlight_through_windows image", Toast.LENGTH_SHORT).show();
-
       }
       else if(lightValue>=Bright_sunlight && lightValue < Direct_sunlight_in_tropical_areas) {
         lightValueText = "Bright sunlight";
-        // Light image
-       // Toast.makeText(context, "Bright_sunlight image", Toast.LENGTH_SHORT).show();
-
       }
       else if(lightValue>=Direct_sunlight_in_tropical_areas) {
         lightValueText = "Direct sunlight in tropical areas";
-        // Light image
-       // Toast.makeText(context, "Direct_sunlight_in_tropical_areas image", Toast.LENGTH_SHORT).show();
-
       }
+      if(lightValueText.length()>0)
       textView.setText(lightValueText);
 
       Log.i("lightValue", String.valueOf(lightValue) + "\n" + lightValueText);
