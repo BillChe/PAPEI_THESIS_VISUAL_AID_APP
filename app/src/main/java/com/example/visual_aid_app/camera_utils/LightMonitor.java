@@ -9,7 +9,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,9 +20,9 @@ import java.util.Map;
  */
 public final class LightMonitor implements SensorEventListener {
 
-  private static final String TAG = "TemperatureMonitor";
+  private static final String TAG = "LightMonitor";
 
-  public Map<String, Float> sensorReadingsCelsius = new HashMap<>();
+  public Map<String, Float> sensorReadings = new HashMap<>();
 
   private final SensorManager sensorManager;
   Context context;
@@ -60,15 +59,15 @@ public final class LightMonitor implements SensorEventListener {
     sensorManager.unregisterListener(this);
   }
 
-  public void logTemperature() {
-    for (Map.Entry<String, Float> entry : sensorReadingsCelsius.entrySet()) {
-      float tempC = entry.getValue();
+  public void logReadings() {
+    for (Map.Entry<String, Float> entry : sensorReadings.entrySet()) {
+      float light = entry.getValue();
       // Skips likely invalid sensor readings
-      if (tempC < 0) {
+      if (light < 0) {
         continue;
       }
-      float tempF = tempC * 1.8f + 32f;
-      Log.i(TAG, String.format(Locale.US, "%s:\t%.1fC\t%.1fF", entry.getKey(), tempC, tempF));
+
+      Log.i(TAG, String.format(Locale.US, "%s:\t%.1f", entry.getKey(), light));
     }
   }
 
@@ -77,7 +76,7 @@ public final class LightMonitor implements SensorEventListener {
 
   @Override
   public void onSensorChanged(SensorEvent sensorEvent) {
-    sensorReadingsCelsius.put(sensorEvent.sensor.getName(), sensorEvent.values[0]);
+    sensorReadings.put(sensorEvent.sensor.getName(), sensorEvent.values[0]);
     float lightValue = sensorEvent.values[0];
     String lightValueText = "";
 
@@ -118,7 +117,7 @@ public final class LightMonitor implements SensorEventListener {
       if(lightValueText.length()>0)
       textView.setText(lightValueText);
 
-      Log.i("lightValue", String.valueOf(lightValue) + "\n" + lightValueText);
+      Log.i("lightValue", lightValue + "\n" + lightValueText);
     }
 
   }
