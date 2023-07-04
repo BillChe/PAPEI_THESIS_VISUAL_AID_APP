@@ -1,5 +1,7 @@
 package com.example.visual_aid_app.activities;
 
+import static android.os.Environment.getExternalStoragePublicDirectory;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
@@ -8,11 +10,10 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import com.example.visual_aid_app.R;
-import android.content.Context;
+
 import android.os.Environment;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -21,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -65,34 +65,37 @@ public class NoteActivity extends AppCompatActivity {
             }
         });
     }
-    private File getOutputDirectory() {
+    private File getOutputDirectory(String titleCustom) {
 
         File miDirs = new File(
-                getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myNotes/"
-                        +getFileNameWithTimeStamp());
+                getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/myNotes/"
+                        +getFileNameWithTimeStamp(titleCustom));
         if (!miDirs.exists())
             miDirs.mkdirs();
 
 
-        File file = new File( String.format(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myNotes/"
-                +getFileNameWithTimeStamp()));
+        File file = new File( String.format(getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/myNotes/"
+                +getFileNameWithTimeStamp(titleCustom)));
         return file;
     }
 
     private void saveNote() {
-        String title = editTextTitle.getText().toString().trim();
+        String titleCustom = editTextTitle.getText().toString().trim();
         String note = editTextNote.getText().toString().trim();
-
         if (TextUtils.isEmpty(note)) {
             Toast.makeText(this, "Please enter a note", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (TextUtils.isEmpty(note)) {
+            Toast.makeText(this, "Please enter a Title", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        String fileName = getFileNameWithTimeStamp();
-        String fileContent = "Title: " + title + "\n\n" + note;
+        String fileName = getFileNameWithTimeStamp(titleCustom);
+        String fileContent = "Title: " + titleCustom + "\n\n" + note;
 
         if (isExternalStorageWritable()) {
-            File file = new File(getOutputDirectory(), fileName);
+            File file = new File(getOutputDirectory(titleCustom), fileName);
 
             try {
                 FileOutputStream outputStream = new FileOutputStream(file);
@@ -115,16 +118,17 @@ public class NoteActivity extends AppCompatActivity {
         return Environment.MEDIA_MOUNTED.equals(state);
     }
 
-    private String getFileNameWithTimeStamp() {
+    private String getFileNameWithTimeStamp(String titleCustom) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
         String timeStamp = dateFormat.format(new Date());
-        return "note_" + timeStamp + ".txt";
+        return titleCustom + timeStamp + ".txt";
     }
 
     private void openPreview() {
         if (isExternalStorageReadable()) {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            Uri uri = Uri.parse(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myNotes/");
+            Uri uri = Uri.parse(getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    + "/myNotes/");
             intent.setDataAndType(uri, "*/*");
             startActivity(intent);
         } else {

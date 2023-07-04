@@ -920,7 +920,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                 mViewModel.setZoomOn(true);*/
                 zoomBtn.setSelected(true);
                 zoomControls.setVisibility(View.VISIBLE);
-                blackwhite.setVisibility(View.VISIBLE);
+                //blackwhite.setVisibility(View.VISIBLE);
                 deactivateOtherButtons(zoomBtn.getTag().toString());
                 selectedModel = ZOOM;
                 bindAnalysisUseCase();
