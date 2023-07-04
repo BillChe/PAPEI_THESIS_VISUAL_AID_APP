@@ -16,7 +16,12 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Monitors device's camera light sensor.
+ * Monitors light sensor on the device's camera.
+ * SensorManager lets you access the device's sensors.
+ * Use this method to get the default sensor for a given type.
+ * Note that the returned sensor could be a composite sensor,
+ * and its data could be averaged or filtered.
+ * If you need to access the raw sensors use getSensorList.
  */
 public final class LightMonitor implements SensorEventListener {
 
@@ -44,11 +49,7 @@ public final class LightMonitor implements SensorEventListener {
     List<Sensor> allSensors = sensorManager.getSensorList(Sensor.TYPE_LIGHT);
     this.textView = textView;
     for (Sensor sensor : allSensors) {
-      // Assumes sensors with "temperature" substring in their names are temperature sensors.
-      // Those sensors may measure the temperature of different parts of the device. It makes more
-      // sense to track the change of themselves, e.g. compare the reading before and after running
-      // a detector for a certain amount of time, rather than relying on their absolute values at a
-      // certain time.
+
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
 
         this.context = context;
