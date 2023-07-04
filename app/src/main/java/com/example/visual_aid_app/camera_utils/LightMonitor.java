@@ -16,7 +16,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Monitors device temperature.
+ * Monitors device's camera light sensor.
  */
 public final class LightMonitor implements SensorEventListener {
 
