@@ -347,7 +347,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
                 long availableMegs = mi.availMem / 0x100000L;
                 Log.d(TAG, "Memory available in system: " + availableMegs + " MB");
                 if(lightMonitor!=null)
-                lightMonitor.logTemperature();
+                lightMonitor.logReadings();
               }
 
               graphicOverlay.clear();
