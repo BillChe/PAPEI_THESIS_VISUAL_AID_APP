@@ -2,14 +2,14 @@
     <string name="app_name">VISUAL AID APP</string>
     <string name="welcome_message">Welcome to Visual Aid App. </string>
     <string name="text_recognition">Text Recognition</string>
-    <string name="text_recognition_option">For Text Recognition Option</string>
-    <string name="quick_text_recognition">For Quick Text Recognition</string>
-    <string name="document_detection_option">For document detection Option</string>
-    <string name="image_description_option">For image description Option</string>
-    <string name="face_detection_option">For face detection Option</string>
-    <string name="zoom_option">For zoom Option</string>
-    <string name="color_detection_option">For color detection Option</string>
-    <string name="flashlight_option">For flashlight Option</string>
+    <string name="text_recognition_option">Text Recognition Functionality</string>
+    <string name="quick_text_recognition">Quick Text Recognition Functionality</string>
+    <string name="document_detection_option">Text Detection Functionality</string>
+    <string name="image_description_option">Image Description Functionality</string>
+    <string name="face_detection_option">Face Detection Functionality</string>
+    <string name="zoom_option">Zoom Functionality</string>
+    <string name="color_detection_option">Color Detection Functionality</string>
+    <string name="flashlight_option">Light Detection Functionality</string>
     <string name="takenote_option">For take a note Option</string>
     <string name="pdfreader_option">For PDF Reader Option</string>
     <string name="help_option">For Help Option</string>
@@ -28,7 +28,7 @@
     <string name="button_capture"> Capture Image Button</string>
     <string name="switch_camera_button"> Switch Camera Button</string>
     <string name="autosave_button">Auto save Button</string>
-
+    <string name="light_detection">Light Detection</string>
     <string name="flashBtn"> Flash On Button</string>
     <string name="flashOffBtn"> Flash Off Button</string>
     <string name="blackwhiteBtn"> Black and white picture Button</string>
@@ -39,6 +39,44 @@
     <string name="savingPleaseWait">Saving… Please wait</string>
     <string name="hideTextBtn">Hide Text</string>
     <string name="resultTextDefault">Your result will appear here</string>
+
+<!--
+    info button strings for each functionality
+-->
+    <string name="text_detection_btn_info">Detect in real time text
+    with camera. You can take photo and save captured image on device storage by clicking on the
+    camera/take picture button. The result text view on screen will be filled with detected text from
+    saved image. If you saved pictures, you can also show saved images by clicking on the image
+        preview on the bottom left.</string>
+    <string name="quick_text_detection_btn_info">Detect in real time text with camera. Results will appear on screen with confidence score
+        metric if it is enabled.You can take photo and save captured image on device storage by
+        clicking on the camera/take picture button.If you saved pictures, you can also show saved
+        images by clicking on the image preview on the bottom left.</string>
+    <string name="document_detection_btn_info">Detect in real time text on a screen with camera. Results will appear on screen with
+        confidence score metric if it is enabled.The result text view on screen will be filled
+        with detected text from saved image. ou can take photo and save captured image on device storage by
+        clicking on the camera/take picture button.If you saved pictures, you can also show saved
+        images by clicking on the image preview on the bottom left.</string>
+    <string name="image_detection_btn_info">Detect objects and
+        person with use of Google MLKit OBJECT DETECTION implementation to view on screen object
+        and person detection results. You can take photo and save captured image on device storage by
+        clicking on the camera/take picture button.If you saved pictures, you can also show saved
+        images by clicking on the image preview on the bottom left.</string>
+    <string name="face_detection_btn_info">Live Face Recognition of a
+        person or persons with use of Google MLKit FACE DETECTION implementation to view on screen
+        face detection results and readings. If a smile is detected, music is played.</string>
+    <string name="zoomFunctionBtn_info">Press the zoom in and zoom out buttons to
+    increase or decrease zoom level of active camera. 3 levels of Zoom are implemented.
+    You can take photo and save captured image on device storage by
+        clicking on the camera/take picture button.If you saved pictures, you can also show saved
+        images by clicking on the image preview on the bottom left.</string>
+    <string name="color_detection_btn_info">Live Color Recognition
+        of camera readings and live capture. You can press the take photo button to update the color
+        readings and update the detected color result on the active frame.</string>
+    <string name="light_btn_info">Light detection of the current camera frame
+    and display on screen the current brightness level of the camera frame using light sensor of the
+        device. </string>
+   <!-- <string name="take_note_btn"> Take Note Button</string>-->
 
 
     <!--MLKIT STRINGS-->

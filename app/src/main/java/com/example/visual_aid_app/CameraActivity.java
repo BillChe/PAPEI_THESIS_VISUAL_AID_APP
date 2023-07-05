@@ -9,6 +9,7 @@ import static java.lang.Math.max;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.camera.core.CameraInfoUnavailableException;
@@ -26,6 +27,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -99,13 +101,8 @@ import androidx.camera.core.Camera;
 public class CameraActivity extends AppCompatActivity {
     private CameraSource mCameraSource;
     private Camera camera;
-/*
-    Camera.Parameters parameters;
-*/
-/*    private CameraPreview mPreview;*/
-private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
     Button captureButton ;
-    protected String imageFilePath,quickCaptureText = "";
+    protected String imageFilePath = "";
     private SurfaceView mCameraView;
     private TextView textview;
     ZoomControls zoomControls;
@@ -234,8 +231,6 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                             bindAllCameraUseCases();
                         });
 
-      /*  mViewModel.setSaveImageOn(true);
-        mViewModel.setNoteOn(false);*/
         //init view with text detection
         textDetectBtn.setSelected(true);
         /*mViewModel.setTextDetection(true);*/
@@ -806,8 +801,73 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
             @Override
             public void onClick(View view) {
                 quickText = false;
-                Toast.makeText(CameraActivity.this,"Show info for selected function",
-                        Toast.LENGTH_SHORT).show();
+                String selectedFunctionalityInfo = "";
+                String selectedFunctionality = "";
+                if(textDetectBtn.isSelected())
+                {
+                    selectedFunctionalityInfo = getString(R.string.text_detection_btn_info);
+                    selectedFunctionality = getString(R.string.text_recognition);
+                }
+                else if(quickTextDetectBtn.isSelected())
+                {
+                    selectedFunctionalityInfo = getString(R.string.quick_text_detection_btn_info);
+                    selectedFunctionality = getString(R.string.quick_text_recognition);
+                }
+                else if(documentDetectBtn.isSelected())
+                {
+                    selectedFunctionalityInfo = getString(R.string.document_detection_btn_info);
+                    selectedFunctionality = getString(R.string.document_detection_option);
+
+                }
+                else if(faceDetectionBtn.isSelected())
+                {
+                    selectedFunctionalityInfo = getString(R.string.face_detection_btn_info);
+                    selectedFunctionality = getString(R.string.face_detection_option);
+
+                }
+                else if(imageDescriptionBtn.isSelected())
+                {
+                    selectedFunctionalityInfo = getString(R.string.image_detection_btn_info);
+                    selectedFunctionality = getString(R.string.image_description_option);
+
+                }
+                else if(colorRecognitionBtn.isSelected())
+                {
+                    selectedFunctionalityInfo = getString(R.string.color_detection_btn_info);
+                    selectedFunctionality = getString(R.string.color_detection_option);
+
+                }
+                else if(zoomBtn.isSelected())
+                {
+                    selectedFunctionalityInfo = getString(R.string.zoomFunctionBtn_info);
+                    selectedFunctionality = getString(R.string.zoom_option);
+
+                }
+                else if(lightFunctionBtn.isSelected())
+                {
+                    selectedFunctionalityInfo = getString(R.string.light_btn_info);
+                    selectedFunctionality = getString(R.string.light_detection);
+
+                }
+
+                if(selectedFunctionalityInfo.length()>0 && selectedFunctionality.length()>0)
+                {
+               /*     Toast.makeText(CameraActivity.this,selectedFunctionalityInfo,
+                            Toast.LENGTH_SHORT).show();*/
+                    AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
+                    builder.setTitle(selectedFunctionality);
+                    builder.setMessage(selectedFunctionalityInfo)
+                            .setCancelable(true)
+                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    //do things
+                                    dialog.cancel();
+                                }
+                            });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
+
             }
         });
 
@@ -1252,26 +1312,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                                     .build();
                     imageProcessor = new LabelDetectorProcessor(this, customAutoMLLabelOptions);
                     break;
-                case POSE_DETECTION:
-                    bindPreviewUseCase();
 
-                    PoseDetectorOptionsBase poseDetectorOptions =
-                            PreferenceUtils.getPoseDetectorOptionsForLivePreview(this);
-                    boolean shouldShowInFrameLikelihood =
-                            PreferenceUtils.shouldShowPoseDetectionInFrameLikelihoodLivePreview(this);
-                    boolean visualizeZ = PreferenceUtils.shouldPoseDetectionVisualizeZ(this);
-                    boolean rescaleZ = PreferenceUtils.shouldPoseDetectionRescaleZForVisualization(this);
-                    boolean runClassification = PreferenceUtils.shouldPoseDetectionRunClassification(this);
-                    imageProcessor =
-                            new PoseDetectorProcessor(
-                                    this,
-                                    poseDetectorOptions,
-                                    shouldShowInFrameLikelihood,
-                                    visualizeZ,
-                                    rescaleZ,
-                                    runClassification,
-                                    /* isStreamMode = */  true);
-                    break;
                 case ZOOM:
                     Log.i(TAG, "Zoom mode on.");
                     zoomControls.setVisibility(View.VISIBLE);
@@ -1302,6 +1343,7 @@ private com.google.android.gms.vision.text.TextRecognizer textRecognizer;
                             "Can not create image processor: " + e.getLocalizedMessage(),
                             Toast.LENGTH_LONG)
                     .show();
+
             return;
         }
 

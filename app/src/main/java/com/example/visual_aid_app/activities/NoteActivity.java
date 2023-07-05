@@ -127,10 +127,10 @@ public class NoteActivity extends AppCompatActivity {
     private void openPreview() {
         if (isExternalStorageReadable()) {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            Uri uri = Uri.parse(getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            Uri uri = Uri.parse(getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()
                     + "/myNotes/");
-            intent.setDataAndType(uri, "*/*");
-            startActivity(intent);
+            intent.setDataAndType(uri, "text/*");
+            startActivity(Intent.createChooser(intent, "Open folder"));
         } else {
             Toast.makeText(this, "External storage is not available", Toast.LENGTH_SHORT).show();
         }
