@@ -80,25 +80,20 @@ import androidx.camera.core.Camera;
 public class CameraActivity extends AppCompatActivity {
     Button captureButton ;
     protected String imageFilePath = "";
-    private SurfaceView mCameraView;
     private TextView textview;
     ZoomControls zoomControls;
-    public static final int CAMERA_FACING_BACK = 0;
-    public static final int CAMERA_FACING_FRONT = 1;
     private final int cameraPermissionID = 101;
     float currentZoomLevel = 0f, maxZoomLevel = 1.0f;
-    boolean flashOn, textDetection, negativeCam;
-    private AppCompatButton zoomBtn, textDetectBtn,
-            quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
-            colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,
-            button_switch_camera, button_savenote, hideTextBtn;
-    private AppCompatButton flashBtn, info, blackwhite,settingsBtn;
+    boolean flashOn, textDetection;
+    private AppCompatButton zoomBtn, textDetectBtn, quickTextDetectBtn,documentDetectBtn,
+            imageDescriptionBtn,faceDetectionBtn, colorRecognitionBtn, lightFunctionBtn,
+            noteFunctionBtn, button_switch_camera, button_savenote, hideTextBtn;
+    private AppCompatButton flashBtn, info,settingsBtn;
     ImageView showImageView,showImageViewPreview;
     HorizontalScrollView functionsMenu;
     Context context;
     List <AppCompatButton> buttonFunctionsList;
     private TextToSpeech textToSpeech;
-    private int activeCamera = CAMERA_FACING_BACK;
     private EditText noteET;
 
     ApplicationInfo applicationInfo;
@@ -338,10 +333,8 @@ public class CameraActivity extends AppCompatActivity {
         //bottom buttons
         captureButton = findViewById(R.id.button_capture);
         button_switch_camera = findViewById(R.id.button_switch_camera);
-        mCameraView = findViewById(R.id.surfaceView);
         flashBtn = findViewById(R.id.flashBtn);
         info = findViewById(R.id.info);
-        blackwhite = findViewById(R.id.blackwhite);
         settingsBtn = findViewById(R.id.settingsBtn);
 
         showImageView = findViewById(R.id.showImageView);
@@ -696,7 +689,7 @@ public class CameraActivity extends AppCompatActivity {
                 faceDetectionBtn.setSelected(true);
                 selectedModel = FACE_DETECTION;
                 deactivateOtherButtons(faceDetectionBtn.getTag().toString());
-                negativeCam = false;
+                  
                 textDetection = false;
                 bindAnalysisUseCase();
             }
@@ -737,8 +730,8 @@ public class CameraActivity extends AppCompatActivity {
         zoomBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                activeCamera = CAMERA_FACING_BACK;
-                negativeCam = false;
+                 
+                  
                 textDetection = false;
                 zoomBtn.setSelected(true);
                 zoomControls.setVisibility(View.VISIBLE);
@@ -750,9 +743,8 @@ public class CameraActivity extends AppCompatActivity {
         colorRecognitionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                activeCamera = CAMERA_FACING_BACK;
                 quickText = false;
-                negativeCam = false;
+                  
                 textDetection = false;
                 hideZoomControls();
                 selectedModel = COLOR_RECOGNITION;
@@ -773,9 +765,8 @@ public class CameraActivity extends AppCompatActivity {
                 restoreTextView();
                 lightFunctionBtn.setSelected(true);
                 deactivateOtherButtons(lightFunctionBtn.getTag().toString());
-                activeCamera = CAMERA_FACING_BACK;
                 quickText = false;
-                negativeCam = false;
+                  
                 textDetection = false;
                 selectedModel = LIGHT_MONITOR;
                 //clear imageProcessor and graphic overlay on Light functionality
@@ -792,8 +783,8 @@ public class CameraActivity extends AppCompatActivity {
             public void onClick(View view) {
                 imageDescriptionBtn.setSelected(true);
                 deactivateOtherButtons(imageDescriptionBtn.getTag().toString());
-                activeCamera = CAMERA_FACING_BACK;
-                negativeCam = false;
+                 
+                  
                 textDetection = false;
                 quickText = false;
                 selectedModel = OBJECT_DETECTION_CUSTOM;
