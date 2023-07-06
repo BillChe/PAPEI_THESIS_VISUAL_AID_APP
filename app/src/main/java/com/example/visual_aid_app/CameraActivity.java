@@ -323,15 +323,11 @@ public class CameraActivity extends AppCompatActivity {
 
     }
 
-
     private void detectColor(Bitmap imageBitmap) {
         new ColorFinder(new ColorFinder.CallbackInterface() {
             @Override
             public void onCompleted(String color) {
                 Log.e("CameraActivity", "Color found: " + color);
-/*
-                Toast.makeText(CameraActivity.this, "Your Color : " + color, Toast.LENGTH_LONG).show();
-*/
                 textview.setText("Color found: " + color);
             }
 
@@ -369,6 +365,7 @@ public class CameraActivity extends AppCompatActivity {
         textview = findViewById(R.id.textview);
         noteET = findViewById(R.id.noteET);
     }
+
     private void tryReloadAndDetectInImage(Bitmap resizedBitmap) {
         Log.d(TAG, "Try reload and detect image");
       //  try {
@@ -410,6 +407,7 @@ public class CameraActivity extends AppCompatActivity {
             imageFilePath = null;
         }*/
     }
+
     private void takePhoto() {
         restoreTextView();
         if(!colorRecognitionBtn.isSelected())
@@ -477,11 +475,7 @@ public class CameraActivity extends AppCompatActivity {
                                     }
 
                                 }
-                                else if(lightFunctionBtn.isSelected())
-                                {
 
-                                    //tryReloadAndDetectInImage(savedImageBitmap);
-                                }
                             }
                         }
 
@@ -505,8 +499,6 @@ public class CameraActivity extends AppCompatActivity {
         }
 
     }
-
-
 
     private void restoreTextView() {
         hideTextBtn.setVisibility(View.GONE);
@@ -853,6 +845,7 @@ public class CameraActivity extends AppCompatActivity {
 
         }
     }
+
     private void bindPreviewUseCase() {
         if (!PreferenceUtils.isCameraLiveViewportEnabled(this)) {
             return;
@@ -930,10 +923,10 @@ public class CameraActivity extends AppCompatActivity {
         }
 
     }
+
     private void showSettingsActivity() {
         Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
         startActivity(intent);
-
     }
 
     private void bindAnalysisUseCase() {
@@ -1076,9 +1069,7 @@ public class CameraActivity extends AppCompatActivity {
                     });
         }
 
-
         cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, analysisUseCase);
-
 
     }
 
@@ -1108,7 +1099,6 @@ public class CameraActivity extends AppCompatActivity {
             restoreAfterAccessibilityDisabled = false;
             recreate();
         }
-
 
     }
 
