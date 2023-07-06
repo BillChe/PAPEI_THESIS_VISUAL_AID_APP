@@ -206,14 +206,13 @@ public class CameraActivity extends AppCompatActivity {
         // Create an instance of Camera
         if (checkHasCameraPermission(CameraActivity.this)
                 && checkHasWritgeExternalStoragePermission(CameraActivity.this)) {
-            //getCameraInstance();
         }
         else
         {
             requestCameraPermission();
         }
 
-        //ML Kit staff initialization
+        //ML Kit initialization
         if (savedInstanceState != null) {
             //selectedModel = savedInstanceState.getString(STATE_SELECTED_MODEL, OBJECT_DETECTION);
         }
@@ -710,7 +709,6 @@ public class CameraActivity extends AppCompatActivity {
                 bindAnalysisUseCase();
             }
         });
-
         button_switch_camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -743,7 +741,6 @@ public class CameraActivity extends AppCompatActivity {
                         .show();
             }
 
-
         });
         zoomBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -758,7 +755,6 @@ public class CameraActivity extends AppCompatActivity {
                 bindAllCameraUseCases();
                }
         });
-
         colorRecognitionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -808,7 +804,7 @@ public class CameraActivity extends AppCompatActivity {
                 negativeCam = false;
                 textDetection = false;
                 quickText = false;
-                startImageDescription();
+                selectedModel = OBJECT_DETECTION_CUSTOM;
                 bindAnalysisUseCase();
 
             }
@@ -845,11 +841,6 @@ public class CameraActivity extends AppCompatActivity {
 
             }
         });
-    }
-
-    private void startImageDescription() {
-
-        selectedModel = OBJECT_DETECTION_CUSTOM;
     }
 
     private void bindAllCameraUseCases() {
@@ -945,7 +936,6 @@ public class CameraActivity extends AppCompatActivity {
 
     }
 
-
     private void bindAnalysisUseCase() {
         restoreTextView();
         if (cameraProvider == null) {
@@ -1022,13 +1012,6 @@ public class CameraActivity extends AppCompatActivity {
                     bindPreviewUseCase();
 
                     break;
-                case LIGHT_MONITOR:
-                    Log.i(TAG, "LIGHT_MONITOR mode on.");
-                    imageProcessor =
-                            new TextRecognitionProcessor(this,textview);
-                    bindPreviewUseCase();
-
-                    break;
 
                 default:
                     throw new IllegalStateException("Invalid model name");
@@ -1052,7 +1035,6 @@ public class CameraActivity extends AppCompatActivity {
         analysisUseCase = builder.build();
 
         needUpdateGraphicOverlayImageSourceInfo = true;
-        //todo vasilis add color Analyzer
 
         if(colorRecognitionBtn.isSelected())
         {
@@ -1129,6 +1111,7 @@ public class CameraActivity extends AppCompatActivity {
 
 
     }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -1136,6 +1119,7 @@ public class CameraActivity extends AppCompatActivity {
             imageProcessor.stop();
         }
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -1143,6 +1127,7 @@ public class CameraActivity extends AppCompatActivity {
             imageProcessor.stop();
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
