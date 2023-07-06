@@ -87,7 +87,7 @@ public class CameraActivity extends AppCompatActivity {
     public static final int CAMERA_FACING_FRONT = 1;
     private final int cameraPermissionID = 101;
     float currentZoomLevel = 0f, maxZoomLevel = 1.0f;
-    boolean isZoomSupported, flashOn, textDetection, negativeCam;
+    boolean flashOn, textDetection, negativeCam;
     private AppCompatButton zoomBtn, textDetectBtn,
             quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
             colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,
@@ -103,9 +103,8 @@ public class CameraActivity extends AppCompatActivity {
 
     ApplicationInfo applicationInfo;
     ImageProxy latestImageProxy;
-
     String applicationName = "";
-    private boolean autoSave = false;
+
     //ML Kit staff
     private static final String TAG = "CameraXLivePreview";
 
@@ -230,6 +229,7 @@ public class CameraActivity extends AppCompatActivity {
 
     }
 
+    //handling case on UI if Accessibility Options are activated on device
     private void setAlternativeButtonViews() {
         for(int i = 0; i < buttonFunctionsList.size();i++)
         {
