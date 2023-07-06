@@ -983,7 +983,7 @@ public class CameraActivity extends AppCompatActivity {
                 //blackwhite.setVisibility(View.VISIBLE);
                 deactivateOtherButtons(zoomBtn.getTag().toString());
                 selectedModel = ZOOM;
-                bindAnalysisUseCase();
+                bindAllCameraUseCases();
                }
         });
         blackwhite.setOnClickListener(new View.OnClickListener() {
@@ -1023,7 +1023,12 @@ public class CameraActivity extends AppCompatActivity {
                 selectedModel = COLOR_RECOGNITION;
                 colorRecognitionBtn.setSelected(true);
                 deactivateOtherButtons(colorRecognitionBtn.getTag().toString());
-                bindAnalysisUseCase();
+                //clear imageProcessor and graphic overlay on Color Recognition functionality
+                if(imageProcessor!=null)
+                    imageProcessor.stop();
+                if(graphicOverlay!=null)
+                    graphicOverlay.clear();
+                bindAllCameraUseCases();
 
             }
         });
@@ -1042,7 +1047,12 @@ public class CameraActivity extends AppCompatActivity {
                 negativeCam = false;
                 textDetection = false;
                 selectedModel = LIGHT_MONITOR;
-                bindAnalysisUseCase();
+                //clear imageProcessor and graphic overlay on Light functionality
+                if(imageProcessor!=null)
+                    imageProcessor.stop();
+                if(graphicOverlay!=null)
+                    graphicOverlay.clear();
+                bindAllCameraUseCases();
 
             }
         });
@@ -1316,6 +1326,11 @@ public class CameraActivity extends AppCompatActivity {
                 case ZOOM:
                     Log.i(TAG, "Zoom mode on.");
                     zoomControls.setVisibility(View.VISIBLE);
+                    //clear imageProcessor and graphic overlay on ZOOM functionality
+                    if(imageProcessor!=null)
+                    imageProcessor.stop();
+                    if(graphicOverlay!=null)
+                    graphicOverlay.clear();
                     bindPreviewUseCase();
 
                     break;
@@ -1361,13 +1376,13 @@ public class CameraActivity extends AppCompatActivity {
         {
             analysisUseCase.setAnalyzer(
                     // imageProcessor.processImageProxy will use another thread to run the detection underneath,
-                    // thus we can just runs the analyzer itself on main thread.
+                    // thus we can just run the analyzer itself on main thread.
                     ContextCompat.getMainExecutor(this),new ColorAnalyzer(CameraActivity.this,textview));
         }
         else {
             analysisUseCase.setAnalyzer(
                     // imageProcessor.processImageProxy will use another thread to run the detection underneath,
-                    // thus we can just runs the analyzer itself on main thread.
+                    // thus we can just run the analyzer itself on main thread.
                     ContextCompat.getMainExecutor(this),
                     imageProxy -> {
                         if (needUpdateGraphicOverlayImageSourceInfo) {
