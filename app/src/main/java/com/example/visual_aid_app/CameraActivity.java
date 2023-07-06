@@ -1,11 +1,9 @@
 package com.example.visual_aid_app;
 
+import static com.example.visual_aid_app.camera_utils.BitmapUtils.rotateImage;
 import static com.example.visual_aid_app.textdetector.TextGraphic.textFound;
 import static com.example.visual_aid_app.utils.Util.checkHasCameraPermission;
 import static com.example.visual_aid_app.utils.Util.checkHasWritgeExternalStoragePermission;
-import static com.example.visual_aid_app.ZoomActivity.rotateImage;
-
-import static java.lang.Math.max;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,8 +33,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Point;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -57,39 +53,22 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ZoomControls;
-
-
 import com.example.visual_aid_app.activities.NoteActivity;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.camera_utils.VisionImageProcessor;
-import com.example.visual_aid_app.databinding.ActivityCameraBinding;
 import com.example.visual_aid_app.facedetector.FaceDetectorProcessor;
-import com.example.visual_aid_app.labeldetector.LabelDetectorProcessor;
 import com.example.visual_aid_app.objectdetector.ObjectDetectorProcessor;
-import com.example.visual_aid_app.posedetector.PoseDetectorProcessor;
 import com.example.visual_aid_app.preference.PreferenceUtils;
 import com.example.visual_aid_app.preference.SettingsActivity;
 
 import com.example.visual_aid_app.textdetector.TextRecognitionProcessor;
 import com.example.visual_aid_app.utils.ColorAnalyzer;
 import com.example.visual_aid_app.utils.ColorFinder;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.vision.CameraSource;
 import com.google.mlkit.common.MlKitException;
 import com.google.mlkit.common.model.LocalModel;
-import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions;
-import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
-import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
-import com.google.mlkit.vision.text.Text;
-import com.google.mlkit.vision.text.TextRecognition;
-import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -99,8 +78,6 @@ import java.util.Locale;
 import androidx.camera.core.Camera;
 
 public class CameraActivity extends AppCompatActivity {
-    private CameraSource mCameraSource;
-    private Camera camera;
     Button captureButton ;
     protected String imageFilePath = "";
     private SurfaceView mCameraView;
@@ -110,7 +87,7 @@ public class CameraActivity extends AppCompatActivity {
     public static final int CAMERA_FACING_FRONT = 1;
     private final int cameraPermissionID = 101;
     float currentZoomLevel = 0f, maxZoomLevel = 1.0f;
-    boolean isPreviewing, isZoomSupported, isSmoothZoomSupported, flashOn, textDetection, negativeCam;
+    boolean isZoomSupported, flashOn, textDetection, negativeCam;
     private AppCompatButton zoomBtn, textDetectBtn,
             quickTextDetectBtn,documentDetectBtn, imageDescriptionBtn,faceDetectionBtn,
             colorRecognitionBtn, lightFunctionBtn,noteFunctionBtn,
@@ -118,8 +95,6 @@ public class CameraActivity extends AppCompatActivity {
     private AppCompatButton flashBtn, info, blackwhite,settingsBtn;
     ImageView showImageView,showImageViewPreview;
     HorizontalScrollView functionsMenu;
-    private CameraActivityViewModel mViewModel;
-    ActivityCameraBinding binding;
     Context context;
     List <AppCompatButton> buttonFunctionsList;
     private TextToSpeech textToSpeech;
@@ -139,11 +114,6 @@ public class CameraActivity extends AppCompatActivity {
     private static final String CUSTOM_AUTOML_OBJECT_DETECTION =
             "Custom AutoML Object Detection (Flower)";
     private static final String FACE_DETECTION = "Face Detection";
-    private static final String BARCODE_SCANNING = "Barcode Scanning";
-    private static final String IMAGE_LABELING = "Image Labeling";
-    private static final String IMAGE_LABELING_CUSTOM = "Custom Image Labeling (Birds)";
-    private static final String CUSTOM_AUTOML_LABELING = "Custom AutoML Image Labeling (Flower)";
-    private static final String POSE_DETECTION = "Pose Detection";
     private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
     private static final String ZOOM = "Zoom";
     private static final String COLOR_RECOGNITION = "Color Recognition";
@@ -168,7 +138,6 @@ public class CameraActivity extends AppCompatActivity {
     public static boolean quickText;
     Bitmap savedImageBitmap;
     String new_Date = "";
-    //zoom values
 
     //accessibility options
     boolean isAccessibilityEnabled;
@@ -233,7 +202,6 @@ public class CameraActivity extends AppCompatActivity {
 
         //init view with text detection
         textDetectBtn.setSelected(true);
-        /*mViewModel.setTextDetection(true);*/
         //camera init
         // Create an instance of Camera
         if (checkHasCameraPermission(CameraActivity.this)
@@ -356,173 +324,6 @@ public class CameraActivity extends AppCompatActivity {
 
     }
 
-    /*private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
-
-        @Override
-        public void onPictureTaken(byte[] data, Camera camera) {
-
-            FileOutputStream pictureFile = null;
-            try {
-                final Calendar c = Calendar.getInstance();
-                String new_Date = c.get(Calendar.DAY_OF_MONTH) + "-"
-                        + ((c.get(Calendar.MONTH)) + 1) + "-"
-                        + c.get(Calendar.YEAR) + " " + c.get(Calendar.HOUR)
-                        + "-" + c.get(Calendar.MINUTE) + "-"
-                        + c.get(Calendar.SECOND);
-                File miDirs = new File(
-                        getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
-                                +applicationName+ "/%s.jpg", "te1t(" + new_Date + ")");
-                if (!miDirs.exists())
-                    miDirs.mkdirs();
-
-
-
-                imageFilePath = String.format(
-                        getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
-                                +applicationName+ "/%s.jpg", "te1t(" + new_Date + ")");
-
-                Uri selectedImage = Uri.parse(imageFilePath);
-                File file = new File(imageFilePath);
-                if(!file.exists()){
-                    try {
-                        file.createNewFile();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }else{
-                    file.delete();
-                    try {
-                        file.createNewFile();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-                String path = file.getAbsolutePath();
-                Bitmap bitmap = null;
-
-                pictureFile = new FileOutputStream(file);
-                pictureFile.write(data);
-                pictureFile.close();
-
-                if (path != null) {
-                    if (path.startsWith("content")) {
-                        bitmap = decodeStrem(file, selectedImage,
-                                CameraActivity.this);
-                    } else {
-                         bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-
-                    }
-                }
-                if (bitmap != null) {
-                    MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, new_Date , "image:"+new_Date);
-                    Toast.makeText(CameraActivity.this,
-                                    "Picture Captured Successfully:", Toast.LENGTH_LONG)
-                            .show();
-                    //Pop intent
-                    if(textDetectBtn.isSelected())
-                    {
-                        bitmap = rotateImage(bitmap, file.getAbsolutePath());
-                        detectText(bitmap);
-                    }
-                    else if(quickTextDetectBtn.isSelected())
-                    {
-                        bitmap = rotateImage(bitmap, file.getAbsolutePath());
-                        //quickTextDetection(bitmap,false);
-                        detectText(bitmap);
-
-                    }
-                    else if(documentDetectBtn.isSelected())
-                    {
-                        bitmap = rotateImage(bitmap, file.getAbsolutePath());
-                        quickTextDetection(bitmap,true);
-                    }
-                    else if(faceDetectionBtn.isSelected())
-                    {
-                        if(activeCamera == CAMERA_FACING_BACK)
-                        {
-                            bitmap = rotateImage(bitmap, file.getAbsolutePath());
-
-                        }
-                        detectFace(bitmap);
-
-                    }
-                    else if(colorRecognitionBtn.isSelected())
-                    {
-                        bitmap = rotateImage(bitmap, file.getAbsolutePath());
-                        detectColor(bitmap);
-
-                    }
-                    else if(lightFunctionBtn.isSelected())
-                    {
-                        bitmap = rotateImage(bitmap, file.getAbsolutePath());
-
-                    }
-
-
-                    showImageView.setImageBitmap(bitmap);
-                    showImageViewPreview.setImageBitmap(bitmap);
-
-
-                } else {
-                    quickCaptureText = "no text found";
-                    textview.setText(quickCaptureText);
-                    textToSpeech.speak(quickCaptureText.toString(), TextToSpeech.QUEUE_FLUSH, null);
-                    Toast.makeText(CameraActivity.this,
-                            "Failed to Capture the picture. kindly Try Again:",
-                            Toast.LENGTH_LONG).show();
-                }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-            }
-            if (pictureFile == null){
-                Log.d(TAG, "Error creating media file, check storage permissions");
-                return;
-            }
-
-
-        }
-    };*/
-    public void detectText() {
-        InputImage image = InputImage.fromBitmap(savedImageBitmap,0);
-        TextRecognizer textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
-        Task<Text> result = textRecognizer.process(image).addOnSuccessListener(new OnSuccessListener<Text>() {
-            @Override
-            public void onSuccess(Text text) {
-                StringBuilder result = new StringBuilder();
-                for(Text.TextBlock textBlock : text.getTextBlocks())
-                {
-                    String blockText = textBlock.getText();
-                    Point[] blockCornerPoint = textBlock.getCornerPoints();
-                    Rect blockFrame = textBlock.getBoundingBox();
-                    for(Text.Line line : textBlock.getLines())
-                    {
-                        String lineText = line.getText();
-                        Point[] lineCornerPoint = line.getCornerPoints();
-                        Rect lineRect = line.getBoundingBox();
-                        for(Text.Element element : line.getElements())
-                        {
-                            String elementText = element.getText();
-                            result.append(elementText);
-
-                        }
-                        textview.setText(blockText);
-
-                    }
-                }
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(CameraActivity.this,"Failed to detect text from image"+e.getMessage(),
-                        Toast.LENGTH_LONG).show();
-            }
-        });
-    }
 
     private void detectColor(Bitmap imageBitmap) {
         new ColorFinder(new ColorFinder.CallbackInterface() {
@@ -536,11 +337,6 @@ public class CameraActivity extends AppCompatActivity {
             }
 
         }).findDominantColor(imageBitmap);
-    }
-
-    private void quickTextDetection(Bitmap bitmap, boolean isDocument)
-    {
-
     }
 
     private void setViews() {
@@ -852,8 +648,6 @@ public class CameraActivity extends AppCompatActivity {
 
                 if(selectedFunctionalityInfo.length()>0 && selectedFunctionality.length()>0)
                 {
-               /*     Toast.makeText(CameraActivity.this,selectedFunctionalityInfo,
-                            Toast.LENGTH_SHORT).show();*/
                     AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
                     builder.setTitle(selectedFunctionality);
                     builder.setMessage(selectedFunctionalityInfo)
@@ -874,10 +668,6 @@ public class CameraActivity extends AppCompatActivity {
         textDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-               /* mViewModel.setZoomOn(false);
-                mViewModel.setFaceDetectOn(false);
-                mViewModel.setTextDetection(true);*/
                 quickText = false;
                 textDetectBtn.setSelected(true);
                 selectedModel = TEXT_RECOGNITION_LATIN;
@@ -890,10 +680,6 @@ public class CameraActivity extends AppCompatActivity {
         quickTextDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-             /*   mViewModel.setZoomOn(false);
-                mViewModel.setFaceDetectOn(false);
-                mViewModel.setNoteOn(false);
-                mViewModel.setTextDetection(true);*/
                 quickText = true;
                 selectedModel = TEXT_RECOGNITION_LATIN;
                 quickTextDetectBtn.setSelected(true);
@@ -905,10 +691,6 @@ public class CameraActivity extends AppCompatActivity {
         documentDetectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-              /*  mViewModel.setZoomOn(false);
-                mViewModel.setFaceDetectOn(false);
-                mViewModel.setNoteOn(false);
-                mViewModel.setTextDetection(true);*/
                 quickText = false;
                 selectedModel = TEXT_RECOGNITION_LATIN;
                 documentDetectBtn.setSelected(true);
@@ -919,16 +701,12 @@ public class CameraActivity extends AppCompatActivity {
         faceDetectionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-         /*       mViewModel.setZoomOn(false);
-                mViewModel.setNoteOn(false);
-                mViewModel.setTextDetection(false);*/
                 quickText = false;
                 faceDetectionBtn.setSelected(true);
                 selectedModel = FACE_DETECTION;
                 deactivateOtherButtons(faceDetectionBtn.getTag().toString());
                 negativeCam = false;
                 textDetection = false;
-                //mViewModel.setFaceDetectOn(true);
                 bindAnalysisUseCase();
             }
         });
@@ -971,51 +749,20 @@ public class CameraActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 activeCamera = CAMERA_FACING_BACK;
-               /* mViewModel.setTextDetection(false);*/
-
                 negativeCam = false;
                 textDetection = false;
-            /*    mViewModel.setFaceDetectOn(false);
-                mViewModel.setNoteOn(false);
-                mViewModel.setZoomOn(true);*/
                 zoomBtn.setSelected(true);
                 zoomControls.setVisibility(View.VISIBLE);
-                //blackwhite.setVisibility(View.VISIBLE);
                 deactivateOtherButtons(zoomBtn.getTag().toString());
                 selectedModel = ZOOM;
                 bindAllCameraUseCases();
                }
         });
-        blackwhite.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //showSurfaceView();
-                if(!negativeCam)
-                {
-                    negativeCam = true;
-                    mCameraView.setAlpha(1.0f);
-                  /*  parameters = camera.getParameters();
-                    parameters.setColorEffect(Camera.Parameters.EFFECT_NEGATIVE);
-                    camera.setParameters(parameters);*/
-                }
-                else
-                {
-                    negativeCam = false;
-                  /*  parameters = camera.getParameters();
-                    parameters.setColorEffect(Camera.Parameters.EFFECT_NONE);
-                    camera.setParameters(parameters);*/
-                }
 
-            }
-        });
         colorRecognitionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 activeCamera = CAMERA_FACING_BACK;
-           /*     mViewModel.setFaceDetectOn(false);
-                mViewModel.setNoteOn(false);
-                mViewModel.setTextDetection(false);
-                mViewModel.setZoomOn(false);*/
                 quickText = false;
                 negativeCam = false;
                 textDetection = false;
@@ -1039,10 +786,6 @@ public class CameraActivity extends AppCompatActivity {
                 lightFunctionBtn.setSelected(true);
                 deactivateOtherButtons(lightFunctionBtn.getTag().toString());
                 activeCamera = CAMERA_FACING_BACK;
-             /*   mViewModel.setFaceDetectOn(false);
-                mViewModel.setNoteOn(false);
-                mViewModel.setTextDetection(false);
-                mViewModel.setZoomOn(false);*/
                 quickText = false;
                 negativeCam = false;
                 textDetection = false;
@@ -1065,9 +808,6 @@ public class CameraActivity extends AppCompatActivity {
                 negativeCam = false;
                 textDetection = false;
                 quickText = false;
-          /*      mViewModel.setZoomOn(false);
-                mViewModel.setNoteOn(false);
-                mViewModel.setFaceDetectOn(false);*/
                 startImageDescription();
                 bindAnalysisUseCase();
 
@@ -1076,40 +816,14 @@ public class CameraActivity extends AppCompatActivity {
         settingsBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //settingsBtn.setSelected(true);
-                //deactivateOtherButtons(settingsBtn.getTag().toString());
-          /*      if (isPreviewing){
-                    camera.stopPreview();
-                }
-                activeCamera = CAMERA_FACING_BACK;
-                mViewModel.setFaceDetectOn(false);
-                mViewModel.setTextDetection(false);
-                mViewModel.setZoomOn(false);
-                negativeCam = false;
-                textDetection = false;*/
-                //quickText = false;
                 showSettingsActivity();
-                //getCameraInstance();
             }
         });
         noteFunctionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            /*    noteFunctionBtn.setSelected(true);
-                deactivateOtherButtons(noteFunctionBtn.getTag().toString());
-                activeCamera = CAMERA_FACING_BACK;
-             *//*   mViewModel.setFaceDetectOn(false);
-                mViewModel.setTextDetection(false);
-                mViewModel.setZoomOn(false);
-                negativeCam = false;
-                textDetection = false;*//*
-                //noteET.setVisibility(View.VISIBLE);
-                button_savenote.setEnabled(true);
-                quickText = false;*/
                 Intent takeNote = new Intent(CameraActivity.this, NoteActivity.class);
                 startActivity(takeNote);
-                /* mViewModel.setNoteOn(true);*/
-
             }
         });
         button_savenote.setOnClickListener(new View.OnClickListener() {
@@ -1287,40 +1001,8 @@ public class CameraActivity extends AppCompatActivity {
                     break;
                 case FACE_DETECTION:
                     bindPreviewUseCase();
-
                     Log.i(TAG, "Using Face Detector Processor");
                     imageProcessor = new FaceDetectorProcessor(this);
-                    break;
-
-                case IMAGE_LABELING:
-                    bindPreviewUseCase();
-
-                    Log.i(TAG, "Using Image Label Detector Processor");
-                    imageProcessor = new LabelDetectorProcessor(this, ImageLabelerOptions.DEFAULT_OPTIONS);
-                    break;
-                case IMAGE_LABELING_CUSTOM:
-                    bindPreviewUseCase();
-
-                    Log.i(TAG, "Using Custom Image Label (Birds) Detector Processor");
-                    LocalModel localClassifier =
-                            new LocalModel.Builder()
-                                    .setAssetFilePath("custom_models/bird_classifier.tflite")
-                                    .build();
-                    CustomImageLabelerOptions customImageLabelerOptions =
-                            new CustomImageLabelerOptions.Builder(localClassifier).build();
-                    imageProcessor = new LabelDetectorProcessor(this, customImageLabelerOptions);
-                    break;
-                case CUSTOM_AUTOML_LABELING:
-                    bindPreviewUseCase();
-
-                    Log.i(TAG, "Using Custom AutoML Image Label Detector Processor");
-                    LocalModel customAutoMLLabelLocalModel =
-                            new LocalModel.Builder().setAssetManifestFilePath("automl/manifest.json").build();
-                    CustomImageLabelerOptions customAutoMLLabelOptions =
-                            new CustomImageLabelerOptions.Builder(customAutoMLLabelLocalModel)
-                                    .setConfidenceThreshold(0)
-                                    .build();
-                    imageProcessor = new LabelDetectorProcessor(this, customAutoMLLabelOptions);
                     break;
 
                 case ZOOM:
@@ -1480,12 +1162,7 @@ public class CameraActivity extends AppCompatActivity {
         }
 
     }
-/*    @Override
-    protected void onSaveInstanceState(@NonNull Bundle bundle) {
-        super.onSaveInstanceState(bundle);
-        bundle.putString(STATE_SELECTED_MODEL, selectedModel);
-        bundle.putString(STATE_SELECTED_MODEL, selectedModel);
-    }*/
+
     /**
      * Creates a camera permission request
      */

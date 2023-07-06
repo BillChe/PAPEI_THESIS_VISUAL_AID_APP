@@ -17,6 +17,7 @@
 package com.example.visual_aid_app.camera_utils;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
@@ -36,7 +37,11 @@ import androidx.camera.core.ExperimentalGetImage;
 import androidx.camera.core.ImageProxy;
 import androidx.exifinterface.media.ExifInterface;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -281,4 +286,158 @@ public class BitmapUtils {
       rowStart += plane.getRowStride();
     }
   }
+
+  /**
+   * Decode strem.
+   *
+   * @param fil
+   *            the fil
+   * @param selectedImage
+   *            the selected image
+   * @param mContext
+   *            the m context
+   * @return the bitmap
+   */
+  public static Bitmap decodeStrem(File fil, Uri selectedImage,
+                                   Context mContext) {
+
+    Bitmap bitmap = null;
+    try {
+
+      bitmap = BitmapFactory.decodeStream(mContext.getContentResolver()
+              .openInputStream(selectedImage));
+
+      final int THUMBNAIL_SIZE = getThumbSize(bitmap);
+
+      bitmap = Bitmap.createScaledBitmap(bitmap, THUMBNAIL_SIZE,
+              THUMBNAIL_SIZE, false);
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+      bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(baos
+              .toByteArray()));
+
+      return bitmap = rotateImage(bitmap, fil.getAbsolutePath());
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return bitmap;
+  }
+
+
+  /**
+   * Decode file.
+   *
+   * @param f
+   *            the f
+   * @param sampling
+   *            the sampling
+   *            the check
+   * @return the bitmap
+   */
+  public static Bitmap decodeFile(File f, int sampling) {
+    try {
+      BitmapFactory.Options o2 = new BitmapFactory.Options();
+      o2.inJustDecodeBounds = true;
+      BitmapFactory.decodeStream(
+              new FileInputStream(f.getAbsolutePath()), null, o2);
+
+      o2.inSampleSize = sampling;
+      o2.inTempStorage = new byte[48 * 1024];
+
+      o2.inJustDecodeBounds = false;
+      Bitmap bitmap = BitmapFactory.decodeStream(
+              new FileInputStream(f.getAbsolutePath()), null, o2);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+      bitmap = rotateImage(bitmap, f.getAbsolutePath());
+      return bitmap;
+
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (OutOfMemoryError e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  /**
+   * Rotate image.
+   *
+   * @param bmp
+   *            the bmp
+   * @param imageUrl
+   *            the image url
+   * @return the bitmap
+   */
+  public static Bitmap rotateImage(Bitmap bmp, String imageUrl) {
+    if (bmp != null) {
+      android.media.ExifInterface ei;
+      int orientation = 0;
+      try {
+        ei = new android.media.ExifInterface(imageUrl);
+        orientation = ei.getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION,
+                android.media.ExifInterface.ORIENTATION_NORMAL);
+
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      int bmpWidth = bmp.getWidth();
+      int bmpHeight = bmp.getHeight();
+      Matrix matrix = new Matrix();
+      switch (orientation) {
+        case android.media.ExifInterface.ORIENTATION_UNDEFINED:
+          matrix.postRotate(90);
+          break;
+        case android.media.ExifInterface.ORIENTATION_ROTATE_90:
+          matrix.postRotate(90);
+          break;
+        case android.media.ExifInterface.ORIENTATION_ROTATE_180:
+          matrix.postRotate(180);
+          break;
+        case android.media.ExifInterface.ORIENTATION_ROTATE_270:
+          matrix.postRotate(270);
+          break;
+        default:
+          break;
+      }
+      Log.i("resizedBitmap w [%d]" , String.valueOf(bmpWidth));
+      Log.i("resizedBitmap h [%d]" , String.valueOf(bmpHeight));
+
+      Bitmap resizedBitmap = Bitmap.createBitmap(bmp, 0, 0, bmpWidth,
+              bmpHeight, matrix, true);
+      return resizedBitmap;
+    } else {
+      return bmp;
+    }
+  }
+
+
+  /**
+   * Gets the thumb size.
+   *
+   * @param bitmap
+   *            the bitmap
+   * @return the thumb size
+   */
+  public static int getThumbSize(Bitmap bitmap) {
+
+    int THUMBNAIL_SIZE = 250;
+    if (bitmap.getWidth() < 300) {
+      THUMBNAIL_SIZE = 250;
+    } else if (bitmap.getWidth() < 600) {
+      THUMBNAIL_SIZE = 500;
+    } else if (bitmap.getWidth() < 1000) {
+      THUMBNAIL_SIZE = 750;
+    } else if (bitmap.getWidth() < 2000) {
+      THUMBNAIL_SIZE = 1500;
+    } else if (bitmap.getWidth() < 4000) {
+      THUMBNAIL_SIZE = 2000;
+    } else if (bitmap.getWidth() > 4000) {
+      THUMBNAIL_SIZE = 2000;
+    }
+    return THUMBNAIL_SIZE;
+  }
+
 }
