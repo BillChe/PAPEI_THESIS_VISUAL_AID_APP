@@ -13,6 +13,7 @@ import com.example.visual_aid_app.R;
 
 import android.os.Environment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -126,11 +127,12 @@ public class NoteActivity extends AppCompatActivity {
 
     private void openPreview() {
         if (isExternalStorageReadable()) {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            Intent intent = new Intent(Intent.ACTION_PICK);
             Uri uri = Uri.parse(getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()
                     + "/myNotes/");
-            intent.setDataAndType(uri, "text/*");
-            startActivity(Intent.createChooser(intent, "Open folder"));
+            intent.setDataAndType(uri, "*/*");
+            startActivity(intent);
+
         } else {
             Toast.makeText(this, "External storage is not available", Toast.LENGTH_SHORT).show();
         }
