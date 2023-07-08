@@ -1,5 +1,6 @@
 package com.example.visual_aid_app;
 
+import static android.os.Environment.getExternalStoragePublicDirectory;
 import static com.example.visual_aid_app.camera_utils.BitmapUtils.rotateImage;
 import static com.example.visual_aid_app.textdetector.TextGraphic.textFound;
 import static com.example.visual_aid_app.utils.Util.checkHasCameraPermission;
@@ -289,7 +290,8 @@ public class CameraActivity extends AppCompatActivity {
         {
             hideZoomControls();
         }
-        else if(zoomBtn.isSelected() || noteFunctionBtn.isSelected())
+        else if(zoomBtn.isSelected() || noteFunctionBtn.isSelected()
+                || imageDescriptionBtn.isSelected())
         {
             textview.setVisibility(View.GONE);
         }
@@ -487,17 +489,16 @@ public class CameraActivity extends AppCompatActivity {
                 + "-" + c.get(Calendar.MINUTE) + "-"
                 + c.get(Calendar.SECOND);
 
-        File miDirs = new File(
+  /*      File miDirs = new File(
                 getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
-                        +applicationName+ "/%s.jpg", "te1t(" + new_Date + ")");
+                        +applicationName+ "/%s.jpg",   new_Date );
         if (!miDirs.exists())
-            miDirs.mkdirs();
+            miDirs.mkdirs();*/
 
         imageFilePath = String.format(
                 getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
-                        +applicationName+ "/%s.jpg", "te1t(" + new_Date + ")");
-        File file = new File(imageFilePath);
-        return file;
+                        +applicationName+ "/%s.jpg", new_Date );
+        return new File(imageFilePath);
     }
 
     private void setListeners() {
@@ -665,7 +666,6 @@ public class CameraActivity extends AppCompatActivity {
                 faceDetectionBtn.setSelected(true);
                 selectedModel = FACE_DETECTION;
                 deactivateOtherButtons(faceDetectionBtn.getTag().toString());
-                  
                 textDetection = false;
                 bindAnalysisUseCase();
             }
@@ -737,7 +737,6 @@ public class CameraActivity extends AppCompatActivity {
                 lightFunctionBtn.setSelected(true);
                 deactivateOtherButtons(lightFunctionBtn.getTag().toString());
                 quickText = false;
-                  
                 textDetection = false;
                 selectedModel = LIGHT_MONITOR;
                 bindAnalysisUseCase();
@@ -899,6 +898,7 @@ public class CameraActivity extends AppCompatActivity {
                     ObjectDetectorOptions objectDetectorOptions =
                             PreferenceUtils.getObjectDetectorOptionsForLivePreview(this);
                     imageProcessor = new ObjectDetectorProcessor(this, objectDetectorOptions);
+
                     break;
                 case OBJECT_DETECTION_CUSTOM:
                     bindPreviewUseCase();
@@ -913,6 +913,7 @@ public class CameraActivity extends AppCompatActivity {
                                     this, localModel);
                     imageProcessor =
                             new ObjectDetectorProcessor(this, customObjectDetectorOptions);
+
                     break;
                 case CUSTOM_AUTOML_OBJECT_DETECTION:
                     bindPreviewUseCase();
@@ -925,6 +926,7 @@ public class CameraActivity extends AppCompatActivity {
                             PreferenceUtils.getCustomObjectDetectorOptionsForLivePreview(
                                     this, customAutoMLODTLocalModel);
                     imageProcessor = new ObjectDetectorProcessor(this, customAutoMLODTOptions);
+
                     break;
                 case TEXT_RECOGNITION_LATIN:
                     bindPreviewUseCase();
@@ -938,6 +940,7 @@ public class CameraActivity extends AppCompatActivity {
                     bindPreviewUseCase();
                     Log.i(TAG, "Using Face Detector Processor");
                     imageProcessor = new FaceDetectorProcessor(this);
+
                     break;
                 case ZOOM:
                     Log.i(TAG, "Zoom mode on.");

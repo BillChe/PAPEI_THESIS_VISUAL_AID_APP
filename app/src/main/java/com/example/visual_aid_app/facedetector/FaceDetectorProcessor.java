@@ -104,27 +104,21 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
       if (face.getSmilingProbability() != null) {
         float smileProb = face.getSmilingProbability();
         //todo vasilis add here optimization on this
-        if(smileProb > 0.50 && smileProb < 0.80)
+        if(smileProb <= 0.50)
         {
-         /* Toast.makeText(context,
-                  "face detected probably smiling?"+ smileProb,Toast.LENGTH_SHORT).show();*/
           if(player!= null && player.isPlaying())
           {
             player.pause();
           }
         }
-        else if(smileProb <= 0.50)
+        else if(smileProb > 0.50 && smileProb < 0.80)
         {
           if(player!= null && player.isPlaying())
           {
             player.pause();
           }
-         /* Toast.makeText(context,
-                  "face detected and why so serious???"+ smileProb,Toast.LENGTH_SHORT).show();*/
         }
         else if (smileProb >= 0.80) {
-         /* Toast.makeText(context,
-                  "face detected and SMILIIIING!"+ smileProb,Toast.LENGTH_SHORT).show();*/
           if(player!= null && !player.isPlaying())
           {
             playMusic();
@@ -136,7 +130,6 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
         if(player.isPlaying())
         {
           player.pause();
-
         }
       }
       if (face.getRightEyeOpenProbability() != null) {
