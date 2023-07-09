@@ -33,6 +33,7 @@ public class NoteActivity extends AppCompatActivity {
     private AppCompatButton buttonSave;
     private AppCompatButton buttonPreview;
     private AppCompatButton buttonBack;
+    private static final int PICK_FILE_REQUEST_CODE = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,7 @@ public class NoteActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 openPreview();
+                //pickFile();
             }
         });
 
@@ -131,12 +133,33 @@ public class NoteActivity extends AppCompatActivity {
             Uri uri = Uri.parse(getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()
                     + "/myNotes/");
             intent.setDataAndType(uri, "*/*");
-            startActivity(intent);
-
+            startActivityForResult(Intent.createChooser(intent, "Select File"), PICK_FILE_REQUEST_CODE);
         } else {
             Toast.makeText(this, "External storage is not available", Toast.LENGTH_SHORT).show();
         }
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_FILE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            Uri fileUri = data.getData();
+            openFile(fileUri);
+        }
+    }
+
+    private void openFile(Uri fileUri) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(fileUri, "text/plain");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        // Verify that there is an app to handle the intent
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(Intent.createChooser(intent, "Select Program"));
+        }
+    }
+
     private boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
         return Environment.MEDIA_MOUNTED.equals(state) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
