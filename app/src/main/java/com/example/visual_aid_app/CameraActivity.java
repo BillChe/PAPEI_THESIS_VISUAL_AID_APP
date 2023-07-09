@@ -134,6 +134,8 @@ public class CameraActivity extends AppCompatActivity {
     AccessibilityManager accessibilityManager;
 
     public static boolean lightMonitorOn;
+    private static final int PICK_FILE_REQUEST_CODE = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -518,11 +520,12 @@ public class CameraActivity extends AppCompatActivity {
                     if (!latestImage.exists())
                         return;
 
-                    Intent intent = new Intent();
+                    showChooseImageDialog();
+             /*       Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     intent.setDataAndType(Uri.parse(imageFilePath),
                             "image/*");
-                    startActivity(intent);
+                    startActivity(intent);*/
                 }
 
             }
@@ -787,6 +790,65 @@ public class CameraActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_FILE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            Uri fileUri = data.getData();
+            openFile(fileUri);
+        }
+    }
+
+    private void openFile(Uri fileUri) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(fileUri, "image/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+   /*     // Verify that there is an app to handle the intent
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(Intent.createChooser(intent, "Select Program"));
+        }*/
+        startActivity(intent);
+    }
+
+    private void showChooseImageDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Show Image")
+                .setMessage("Choose to view latest image or all saved images")
+                .setPositiveButton("Latest image", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent();
+                        intent.setAction(Intent.ACTION_VIEW);
+                        intent.setDataAndType(Uri.parse(imageFilePath),
+                                "image/*");
+                        startActivity(intent);
+                        dialog.dismiss(); // Close the dialog
+                    }
+                })
+                .setNegativeButton("All saved images", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        Intent intent = new Intent(Intent.ACTION_PICK);
+                        Uri uri = Uri.parse(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
+                                +applicationName);
+                        intent.setDataAndType(uri, "*/*");
+                        startActivityForResult(Intent.createChooser(intent, "Select File"), PICK_FILE_REQUEST_CODE);
+
+                        dialog.dismiss(); // Close the dialog
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    private void showTwoButtonDialog() {
+
     }
 
     private void bindAllCameraUseCases() {
