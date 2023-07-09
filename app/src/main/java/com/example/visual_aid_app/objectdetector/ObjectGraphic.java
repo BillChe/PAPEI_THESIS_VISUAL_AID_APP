@@ -100,42 +100,48 @@ public class ObjectGraphic extends GraphicOverlay.Graphic {
       yLabelOffset -= 2 * lineHeight;
     }
 
-    // Draws the bounding box.
-    RectF rect = new RectF(object.getBoundingBox());
-    // If the image is flipped, the left will be translated to right, and the right to left.
-    float x0 = translateX(rect.left);
-    float x1 = translateX(rect.right);
-    rect.left = Math.min(x0, x1);
-    rect.right = Math.max(x0, x1);
-    rect.top = translateY(rect.top);
-    rect.bottom = translateY(rect.bottom);
-    canvas.drawRect(rect, boxPaints[colorID]);
 
-    // Draws other object info.
-    canvas.drawRect(
-        rect.left - STROKE_WIDTH,
-        rect.top + yLabelOffset,
-        rect.left + textWidth + (2 * STROKE_WIDTH),
-        rect.top,
-        labelPaints[colorID]);
-    yLabelOffset += TEXT_SIZE;
-    canvas.drawText(
-        "Tracking ID: " + object.getTrackingId(),
-        rect.left,
-        rect.top + yLabelOffset,
-        textPaints[colorID]);
-    yLabelOffset += lineHeight;
 
     for (Label label : object.getLabels()) {
-      canvas.drawText(label.getText(), rect.left, rect.top + yLabelOffset, textPaints[colorID]);
-      yLabelOffset += lineHeight;
-      canvas.drawText(
-          String.format(Locale.US, LABEL_FORMAT, label.getConfidence() * 100, label.getIndex()),
-          rect.left,
-          rect.top + yLabelOffset,
-          textPaints[colorID]);
+      if(label.getConfidence()>0.80f)
+      {
+        // Draws the bounding box.
+        RectF rect = new RectF(object.getBoundingBox());
+        // If the image is flipped, the left will be translated to right, and the right to left.
+        float x0 = translateX(rect.left);
+        float x1 = translateX(rect.right);
+        rect.left = Math.min(x0, x1);
+        rect.right = Math.max(x0, x1);
+        rect.top = translateY(rect.top);
+        rect.bottom = translateY(rect.bottom);
+        canvas.drawRect(rect, boxPaints[colorID]);
 
-      yLabelOffset += lineHeight;
+        // Draws other object info.
+        canvas.drawRect(
+                rect.left - STROKE_WIDTH,
+                rect.top + yLabelOffset,
+                rect.left + textWidth + (2 * STROKE_WIDTH),
+                rect.top,
+                labelPaints[colorID]);
+        yLabelOffset += TEXT_SIZE;
+        canvas.drawText(
+                "Tracking ID: " + object.getTrackingId(),
+                rect.left,
+                rect.top + yLabelOffset,
+                textPaints[colorID]);
+        yLabelOffset += lineHeight;
+
+        canvas.drawText(label.getText(), rect.left, rect.top + yLabelOffset, textPaints[colorID]);
+        yLabelOffset += lineHeight;
+        canvas.drawText(
+                String.format(Locale.US, LABEL_FORMAT, label.getConfidence() * 100, label.getIndex()),
+                rect.left,
+                rect.top + yLabelOffset,
+                textPaints[colorID]);
+
+        yLabelOffset += lineHeight;
+      }
+
     }
   }
 }

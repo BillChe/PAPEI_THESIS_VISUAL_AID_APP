@@ -114,4 +114,8 @@ dependencies {
 
     // On Device Machine Learnings
     implementation "com.google.android.odml:image:1.0.0-beta1"
+
+    // Tensorflow Lite dependencies
+    implementation 'org.tensorflow:tensorflow-lite-task-vision-play-services:0.4.2'
+    implementation 'com.google.android.gms:play-services-tflite-gpu:16.1.0'
 }

@@ -59,6 +59,14 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
     textRecognizer = TextRecognition.getClient(textRecognizerOptions);
   }
   public TextRecognitionProcessor(
+          Context context, TextRecognizerOptionsInterface textRecognizerOptions,boolean isDocument) {
+    super(context);
+    shouldGroupRecognizedTextInBlocks = isDocument;
+    showLanguageTag = PreferenceUtils.showLanguageTag(context);
+    showConfidence = PreferenceUtils.shouldShowTextConfidence(context);
+    textRecognizer = TextRecognition.getClient(textRecognizerOptions);
+  }
+  public TextRecognitionProcessor(
           Context context,TextView textView) {
     super(context,textView);
     shouldGroupRecognizedTextInBlocks = false;

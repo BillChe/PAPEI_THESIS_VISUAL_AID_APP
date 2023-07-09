@@ -104,6 +104,7 @@ public class CameraActivity extends AppCompatActivity {
             "Custom AutoML Object Detection (Flower)";
     private static final String FACE_DETECTION = "Face Detection";
     private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
+    private static final String TEXT_RECOGNITION_DOCUMENT = "Text Recognition Document";
     private static final String ZOOM = "Zoom";
     private static final String COLOR_RECOGNITION = "Color Recognition";
     private static final String LIGHT_MONITOR = "Light Monitor";
@@ -653,7 +654,7 @@ public class CameraActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 quickText = false;
-                selectedModel = TEXT_RECOGNITION_LATIN;
+                selectedModel = TEXT_RECOGNITION_DOCUMENT;
                 documentDetectBtn.setSelected(true);
                 deactivateOtherButtons(documentDetectBtn.getTag().toString());
                 bindAnalysisUseCase();
@@ -935,6 +936,14 @@ public class CameraActivity extends AppCompatActivity {
                     imageProcessor =
                             new TextRecognitionProcessor(this,
                                     new TextRecognizerOptions.Builder().build());
+                    break;
+                case TEXT_RECOGNITION_DOCUMENT:
+                    bindPreviewUseCase();
+
+                    Log.i(TAG, "Using on-device Text recognition Processor for Latin in Documents.");
+                    imageProcessor =
+                            new TextRecognitionProcessor(this,
+                                    new TextRecognizerOptions.Builder().build(),true);
                     break;
                 case FACE_DETECTION:
                     bindPreviewUseCase();
