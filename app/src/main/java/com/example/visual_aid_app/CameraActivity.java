@@ -489,11 +489,11 @@ public class CameraActivity extends AppCompatActivity {
                 + "-" + c.get(Calendar.MINUTE) + "-"
                 + c.get(Calendar.SECOND);
 
-  /*      File miDirs = new File(
+        File miDirs = new File(
                 getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
                         +applicationName+ "/%s.jpg",   new_Date );
         if (!miDirs.exists())
-            miDirs.mkdirs();*/
+            miDirs.mkdirs();
 
         imageFilePath = String.format(
                 getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/myphotos/"
