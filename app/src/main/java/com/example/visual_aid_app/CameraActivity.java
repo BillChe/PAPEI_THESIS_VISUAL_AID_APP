@@ -61,6 +61,7 @@ import com.example.visual_aid_app.preference.SettingsActivity;
 import com.example.visual_aid_app.textdetector.TextRecognitionProcessor;
 import com.example.visual_aid_app.utils.ColorAnalyzer;
 import com.example.visual_aid_app.utils.ColorFinder;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.mlkit.common.MlKitException;
 import com.google.mlkit.common.model.LocalModel;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
@@ -135,6 +136,9 @@ public class CameraActivity extends AppCompatActivity {
 
     public static boolean lightMonitorOn;
     private static final int PICK_FILE_REQUEST_CODE = 1;
+
+    private FloatingActionButton fabAdd;
+    private boolean addPending = false;
 
 
     @Override
@@ -298,6 +302,11 @@ public class CameraActivity extends AppCompatActivity {
         {
             textview.setVisibility(View.GONE);
         }
+        //hide face add button
+        if(!faceDetectionBtn.isSelected())
+        {
+            fabAdd.setVisibility(View.GONE);
+        }
 
         lightMonitorOn = lightFunctionBtn.isSelected();
 
@@ -342,6 +351,9 @@ public class CameraActivity extends AppCompatActivity {
         //text detections result textview
         textview = findViewById(R.id.textview);
         noteET = findViewById(R.id.noteET);
+
+        //add face button
+        fabAdd = findViewById(R.id.fab_add);
     }
 
     private void tryReloadAndDetectInImage(Bitmap resizedBitmap) {
@@ -672,6 +684,13 @@ public class CameraActivity extends AppCompatActivity {
                 deactivateOtherButtons(faceDetectionBtn.getTag().toString());
                 textDetection = false;
                 bindAnalysisUseCase();
+                fabAdd.setVisibility(View.VISIBLE);
+            }
+        });
+        fabAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onAddClick();
             }
         });
         button_switch_camera.setOnClickListener(new View.OnClickListener() {
@@ -742,6 +761,8 @@ public class CameraActivity extends AppCompatActivity {
                 deactivateOtherButtons(lightFunctionBtn.getTag().toString());
                 quickText = false;
                 textDetection = false;
+                if(graphicOverlay!=null)
+                    graphicOverlay.clear();
                 selectedModel = LIGHT_MONITOR;
                 bindAnalysisUseCase();
             }
@@ -790,6 +811,10 @@ public class CameraActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private void onAddClick() {
+        addPending = true;
     }
 
     @Override
