@@ -63,8 +63,16 @@
         clicking on the camera/take picture button.If you saved pictures, you can also show saved
         images by clicking on the image preview on the bottom left.</string>
     <string name="face_detection_btn_info">Live Face Recognition of a
-        person or persons with use of Google MLKit FACE DETECTION implementation to view on screen
-        face detection results and readings. If a smile is detected, music is played.</string>
+        person or persons using Google MLKit FACE DETECTION implementation to view on screen
+        face detection results and readings. If smile is detected, music is played.
+        By pressing the face recognition button in the center, runtime face recognition is supported
+        for multiple face models in new screen.
+    </string>
+    <string name="face_recognition_btn_info">Live Face Recognition of a
+        person or persons using Google MLKit FACE DETECTION implementation.
+        By pressing the add button on bottom right a new face model is added for recognition
+        on the next frame. All saved face models are supported only for runtime recognition.
+    </string>
     <string name="zoomFunctionBtn_info">Press the zoom in and zoom out buttons to
     increase or decrease zoom level of active camera. 3 levels of Zoom are implemented.
     You can take photo and save captured image on device storage by
@@ -195,5 +203,6 @@
     <string name="pref_dialog_message_face_detector_min_face_size" translatable="false">Proportion of the head width to the image width, and the valid value range is [0.0, 1.0]</string>
     <string name="pref_toast_invalid_min_face_size" translatable="false">Minimum face size must be a float value and in the range [0.0, 1.0]</string>
 
-
+    <string name="face_recognition">Face Recognition</string>
+    <string name="tfe_od_camera_error" translation_description="Error regarding camera support[CHAR_LIMIT=40]">This device doesn\'t support Camera2 API.</string>
 </resources>

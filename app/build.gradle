@@ -1,7 +1,9 @@
+
 plugins {
     id 'com.android.application'
     id 'com.google.gms.google-services'
     id 'org.jetbrains.kotlin.android'
+    id 'de.undercouch.download'
 }
 
 android {
@@ -38,6 +40,10 @@ android {
         viewBinding true
     }
 
+    aaptOptions {
+        noCompress "tflite"
+    }
+    
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -45,7 +51,9 @@ android {
 
 
 }
-
+// import DownloadModels task
+project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
+project.ext.TMP_DIR   = project.buildDir.toString() + '/downloads'
 dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.5.1'
@@ -115,7 +123,9 @@ dependencies {
     // On Device Machine Learnings
     implementation "com.google.android.odml:image:1.0.0-beta1"
 
-    // Tensorflow Lite dependencies
-    implementation 'org.tensorflow:tensorflow-lite-task-vision-play-services:0.4.2'
-    implementation 'com.google.android.gms:play-services-tflite-gpu:16.1.0'
+    //face recognition dependencies
+    implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
+    implementation('org.tensorflow:tensorflow-lite:0.0.0-nightly') { changing = true }
+    androidTestImplementation 'com.google.truth:truth:1.0.1'
+
 }

@@ -1,6 +1,5 @@
 package com.example.visual_aid_app;
 
-import static android.os.Environment.getExternalStoragePublicDirectory;
 import static com.example.visual_aid_app.camera_utils.BitmapUtils.rotateImage;
 import static com.example.visual_aid_app.textdetector.TextGraphic.textFound;
 import static com.example.visual_aid_app.utils.Util.checkHasCameraPermission;
@@ -54,6 +53,7 @@ import android.widget.ZoomControls;
 import com.example.visual_aid_app.activities.NoteActivity;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.camera_utils.VisionImageProcessor;
+import com.example.visual_aid_app.detection.DetectorActivity;
 import com.example.visual_aid_app.facedetector.FaceDetectorProcessor;
 import com.example.visual_aid_app.objectdetector.ObjectDetectorProcessor;
 import com.example.visual_aid_app.preference.PreferenceUtils;
@@ -137,7 +137,7 @@ public class CameraActivity extends AppCompatActivity {
     public static boolean lightMonitorOn;
     private static final int PICK_FILE_REQUEST_CODE = 1;
 
-    private FloatingActionButton fabAdd;
+    private FloatingActionButton faceRecognition;
     private boolean addPending = false;
 
 
@@ -297,15 +297,15 @@ public class CameraActivity extends AppCompatActivity {
         {
             hideZoomControls();
         }
-        else if(zoomBtn.isSelected() || noteFunctionBtn.isSelected()
-                || imageDescriptionBtn.isSelected())
+       if(zoomBtn.isSelected() || noteFunctionBtn.isSelected()
+                || imageDescriptionBtn.isSelected() || faceDetectionBtn.isSelected())
         {
             textview.setVisibility(View.GONE);
         }
         //hide face add button
         if(!faceDetectionBtn.isSelected())
         {
-            fabAdd.setVisibility(View.GONE);
+            faceRecognition.setVisibility(View.GONE);
         }
 
         lightMonitorOn = lightFunctionBtn.isSelected();
@@ -352,8 +352,8 @@ public class CameraActivity extends AppCompatActivity {
         textview = findViewById(R.id.textview);
         noteET = findViewById(R.id.noteET);
 
-        //add face button
-        fabAdd = findViewById(R.id.fab_add);
+        //start faceRecognition button
+        faceRecognition = findViewById(R.id.faceRecognition);
     }
 
     private void tryReloadAndDetectInImage(Bitmap resizedBitmap) {
@@ -631,7 +631,6 @@ public class CameraActivity extends AppCompatActivity {
                             .setCancelable(true)
                             .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int id) {
-                                    //do things
                                     dialog.cancel();
                                 }
                             });
@@ -684,13 +683,13 @@ public class CameraActivity extends AppCompatActivity {
                 deactivateOtherButtons(faceDetectionBtn.getTag().toString());
                 textDetection = false;
                 bindAnalysisUseCase();
-                fabAdd.setVisibility(View.VISIBLE);
+                faceRecognition.setVisibility(View.VISIBLE);
             }
         });
-        fabAdd.setOnClickListener(new View.OnClickListener() {
+        faceRecognition.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onAddClick();
+                startFaceRecognitionmode();
             }
         });
         button_switch_camera.setOnClickListener(new View.OnClickListener() {
@@ -813,8 +812,10 @@ public class CameraActivity extends AppCompatActivity {
         });
     }
 
-    private void onAddClick() {
-        addPending = true;
+    private void startFaceRecognitionmode() {
+        Intent intent = new Intent(getApplicationContext(), DetectorActivity.class);
+        startActivity(intent);
+        //addPending = true;
     }
 
     @Override

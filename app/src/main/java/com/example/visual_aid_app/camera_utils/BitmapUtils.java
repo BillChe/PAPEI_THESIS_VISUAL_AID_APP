@@ -105,7 +105,7 @@ public class BitmapUtils {
 
     // Recycle the old bitmap if it has changed.
     if (rotatedBitmap != bitmap) {
-      bitmap.recycle();
+      //bitmap.recycle();
     }
     return rotatedBitmap;
   }
@@ -155,6 +155,68 @@ public class BitmapUtils {
     }
 
     return rotateBitmap(decodedBitmap, rotationDegrees, flipX, flipY);
+  }
+  public static Bitmap selfieBitmapRotate(Bitmap decodedBitmap,
+                                          int orientation) {
+    if (decodedBitmap == null) {
+      return null;
+    }
+    int rotationDegrees = 0;
+    boolean flipX = false;
+    boolean flipY = false;
+    // See e.g. https://magnushoff.com/articles/jpeg-orientation/ for a detailed explanation on each
+    // orientation.
+    switch (orientation) {
+      case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+        flipX = true;
+        break;
+      case ExifInterface.ORIENTATION_ROTATE_90:
+      case ExifInterface.ORIENTATION_ROTATE_270:
+        rotationDegrees = 90;
+        break;
+      case ExifInterface.ORIENTATION_TRANSPOSE:
+        rotationDegrees = 90;
+        flipX = true;
+        break;
+      case ExifInterface.ORIENTATION_ROTATE_180:
+        rotationDegrees = 180;
+        break;
+      case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+        flipY = true;
+        break;
+      case ExifInterface.ORIENTATION_TRANSVERSE:
+        rotationDegrees = -90;
+        flipX = true;
+        break;
+      case ExifInterface.ORIENTATION_UNDEFINED:
+      case ExifInterface.ORIENTATION_NORMAL:
+      default:
+        // No transformations necessary in this case.
+    }
+
+    return rotateBitmap(decodedBitmap, rotationDegrees, flipX, flipY);
+  }
+
+  public static int getSquareCropDimensionForBitmap(Bitmap bitmap)
+  {
+    //use the smallest dimension of the image to crop to
+    return Math.min(bitmap.getWidth(), bitmap.getHeight());
+  }
+
+  public static Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth) {
+    // GET CURRENT SIZE
+    int width = bm.getWidth();
+    int height = bm.getHeight();
+    // GET SCALE SIZE
+    float scaleWidth = ((float) newWidth) / width;
+    float scaleHeight = ((float) newHeight) / height;
+    // CREATE A MATRIX FOR THE MANIPULATION
+    Matrix matrix = new Matrix();
+    // RESIZE THE BIT MAP
+    matrix.postScale(scaleWidth, scaleHeight);
+    // "RECREATE" THE NEW BITMAP
+    Bitmap resizedBitmap = Bitmap.createBitmap(bm, 0, 0, width, height, matrix, false);
+    return resizedBitmap;
   }
 
   private static int getExifOrientationTag(ContentResolver resolver, Uri imageUri) {
