@@ -298,7 +298,8 @@ public class CameraActivity extends AppCompatActivity {
             hideZoomControls();
         }
        if(zoomBtn.isSelected() || noteFunctionBtn.isSelected()
-                || imageDescriptionBtn.isSelected() || faceDetectionBtn.isSelected())
+                || imageDescriptionBtn.isSelected() || faceDetectionBtn.isSelected()
+       || quickTextDetectBtn.isSelected())
         {
             textview.setVisibility(View.GONE);
         }
