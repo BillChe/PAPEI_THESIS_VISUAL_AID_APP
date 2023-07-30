@@ -79,6 +79,11 @@ public class TextGraphic extends GraphicOverlay.Graphic {
 
     rectPaint = new Paint();
     rectPaint.setColor(MARKER_COLOR);
+    if (shouldGroupTextInBlocks) {
+      rectPaint.setColor(getApplicationContext().getResources().getColor(R.color.yellow));
+
+    }
+
     rectPaint.setStyle(Paint.Style.STROKE);
     rectPaint.setStrokeWidth(STROKE_WIDTH);
 
@@ -86,9 +91,17 @@ public class TextGraphic extends GraphicOverlay.Graphic {
     textPaint.setColor(TEXT_COLOR);
     textPaint.setTextSize(TEXT_SIZE);
 
+
     labelPaint = new Paint();
     labelPaint.setColor(MARKER_COLOR);
     labelPaint.setStyle(Paint.Style.FILL);
+    if (!shouldGroupTextInBlocks) {
+      textPaint.setColor(getApplicationContext().getResources().getColor(R.color.transp));
+      textPaint.setTextSize(0);
+      labelPaint.setColor(getApplicationContext().getResources().getColor(R.color.transp));
+      labelPaint.setStyle(Paint.Style.STROKE);
+    }
+
     // Redraw the overlay, as this graphic has been added.
     postInvalidate();
   }
@@ -104,18 +117,26 @@ public class TextGraphic extends GraphicOverlay.Graphic {
       Log.d(TAG, "TextBlock boundingbox is: " + textBlock.getBoundingBox());
       Log.d(TAG, "TextBlock cornerpoint is: " + Arrays.toString(textBlock.getCornerPoints()));
       if (shouldGroupTextInBlocks) {
-        String text =
+        confidenceMetric = 0.7f;
+        for (Line line : textBlock.getLines()) {
+          if(line.getConfidence()>=confidenceMetric) {
+            //todo vasilis text found here to be set on cameraActivity textview for handling
+            textFound =  text.getText();
+          }
+        }
+  /*      String text =
             showLanguageTag
                 ? String.format(
                     TEXT_WITH_LANGUAGE_TAG_FORMAT,
                     textBlock.getRecognizedLanguage(),
                     textBlock.getText())
-                : textBlock.getText();
+                : textBlock.getText();*/
         drawText(
-            text,
+            "",
             new RectF(textBlock.getBoundingBox()),
-            TEXT_SIZE * textBlock.getLines().size() + 2 * STROKE_WIDTH,
+            TEXT_SIZE * text.getTextBlocks().size() + 2 * STROKE_WIDTH,
             canvas);
+
       } else {
         for (Line line : textBlock.getLines()) {
           if(CameraActivity.quickText)
@@ -169,23 +190,38 @@ public class TextGraphic extends GraphicOverlay.Graphic {
   }
 
   private void drawText(String text, RectF rect, float textHeight, Canvas canvas) {
-    // If the image is flipped, the left will be translated to right, and the right to left.
-    float x0 = translateX(rect.left);
-    float x1 = translateX(rect.right);
-    rect.left = min(x0, x1);
-    rect.right = max(x0, x1);
-    rect.top = translateY(rect.top);
-    rect.bottom = translateY(rect.bottom);
-    canvas.drawRect(rect, rectPaint);
-    float textWidth = textPaint.measureText(text);
-    canvas.drawRect(
-        rect.left - STROKE_WIDTH,
-        rect.top - textHeight,
-        rect.left + textWidth + 2 * STROKE_WIDTH,
-        rect.top,
-        labelPaint);
-    // Renders the text at the bottom of the box.
-    canvas.drawText(text, rect.left, rect.top - STROKE_WIDTH, textPaint);
+    if(text!=null && text.length()>0)
+    {
+      // If the image is flipped, the left will be translated to right, and the right to left.
+      float x0 = translateX(rect.left);
+      float x1 = translateX(rect.right);
+      rect.left = min(x0, x1);
+      rect.right = max(x0, x1);
+      rect.top = translateY(rect.top);
+      rect.bottom = translateY(rect.bottom);
+      canvas.drawRect(rect, rectPaint);
+      float textWidth = textPaint.measureText(text);
+      canvas.drawRect(
+              rect.left - STROKE_WIDTH,
+              rect.top - textHeight,
+              rect.left + textWidth + 2 * STROKE_WIDTH,
+              rect.top,
+              labelPaint);
+      // Renders the text at the bottom of the box.
+      canvas.drawText(text, rect.left, rect.top - STROKE_WIDTH, textPaint);
+    }
+    else
+    {
+      // If the image is flipped, the left will be translated to right, and the right to left.
+      float x0 = translateX(rect.left);
+      float x1 = translateX(rect.right);
+      rect.left = min(x0, x1);
+      rect.right = max(x0, x1);
+      rect.top = translateY(rect.top);
+      rect.bottom = translateY(rect.bottom);
+      canvas.drawRect(rect, rectPaint);
+    }
+
   }
 
   private void playTextDetectedMessage(String text) {
