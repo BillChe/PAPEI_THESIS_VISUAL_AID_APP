@@ -16,13 +16,17 @@
 
 package com.example.visual_aid_app.textdetector;
 
+import static com.example.visual_aid_app.textdetector.TextOptimization.extractWords;
+import static com.example.visual_aid_app.textdetector.TextOptimization.optimizeText;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.AsyncTask;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
@@ -36,6 +40,7 @@ import com.google.mlkit.vision.text.Text.Symbol;
 import com.google.mlkit.vision.text.Text.TextBlock;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -59,26 +64,37 @@ public class TextGraphic extends GraphicOverlay.Graphic {
   private final boolean shouldGroupTextInBlocks;
   private final boolean showLanguageTag;
   private final boolean showConfidence;
+  private final boolean isDoc;
   //todo vasilis recheck and add better handling on confidence metric
-  private float confidenceMetric = 0.6f;
+  private float confidenceMetric = 0.65f;
   TextToSpeech tts;
   public static String textFound="";
+  Context context;
 
   TextGraphic(
+          Context context,
       GraphicOverlay overlay,
       Text text,
       boolean shouldGroupTextInBlocks,
       boolean showLanguageTag,
-      boolean showConfidence) {
+      boolean showConfidence,
+      boolean isDoc) {
     super(overlay);
 
+    this.context = context;
     this.text = text;
     this.shouldGroupTextInBlocks = shouldGroupTextInBlocks;
     this.showLanguageTag = showLanguageTag;
     this.showConfidence = showConfidence;
+    this.isDoc = isDoc;
 
     rectPaint = new Paint();
     rectPaint.setColor(MARKER_COLOR);
+    if (isDoc) {
+      rectPaint.setColor(getApplicationContext().getResources().getColor(R.color.yellow));
+
+    }
+
     rectPaint.setStyle(Paint.Style.STROKE);
     rectPaint.setStrokeWidth(STROKE_WIDTH);
 
@@ -89,6 +105,13 @@ public class TextGraphic extends GraphicOverlay.Graphic {
     labelPaint = new Paint();
     labelPaint.setColor(MARKER_COLOR);
     labelPaint.setStyle(Paint.Style.FILL);
+    if (isDoc) {
+      textPaint.setColor(getApplicationContext().getResources().getColor(R.color.transp));
+      textPaint.setTextSize(0);
+      labelPaint.setColor(getApplicationContext().getResources().getColor(R.color.transp));
+      labelPaint.setStyle(Paint.Style.STROKE);
+    }
+
     // Redraw the overlay, as this graphic has been added.
     postInvalidate();
   }
@@ -103,7 +126,26 @@ public class TextGraphic extends GraphicOverlay.Graphic {
       Log.d(TAG, "TextBlock text is: " + textBlock.getText());
       Log.d(TAG, "TextBlock boundingbox is: " + textBlock.getBoundingBox());
       Log.d(TAG, "TextBlock cornerpoint is: " + Arrays.toString(textBlock.getCornerPoints()));
-      if (shouldGroupTextInBlocks) {
+      if (isDoc) {
+        confidenceMetric = 0.75f;
+        for (Line line : textBlock.getLines()) {
+          if(line.getConfidence()>=confidenceMetric)
+          {
+            AsyncTask.execute(new Runnable() {
+              @Override
+              public void run() {
+                //TODO your background code
+                List<String> words = extractWords(text.getText());
+                List<String> optimizedWords = optimizeText(words,context);
+
+                String optimizedText = String.join(" ", optimizedWords);
+                System.out.println("Optimized Text: " + optimizedText);
+                textFound =  optimizedText;
+              }
+            });
+
+          }
+        }
         String text =
             showLanguageTag
                 ? String.format(
@@ -124,8 +166,28 @@ public class TextGraphic extends GraphicOverlay.Graphic {
           }
           if(line.getConfidence()>=confidenceMetric)
           {
-            //todo vasilis text found here to be set on cameraActivity textview for handling
-            textFound =  text.getText();
+            if(!CameraActivity.quickText)
+            {
+              //todo vasilis text found here to be set on cameraActivity textview for handling
+              AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                  //TODO your background code
+                  List<String> words = extractWords(text.getText());
+                  List<String> optimizedWords = optimizeText(words,context);
+
+                  String optimizedText = String.join(" ", optimizedWords);
+                  System.out.println("Optimized Text: " + optimizedText);
+                  textFound =  optimizedText;
+                }
+              });
+            }
+            else
+            {
+              textFound =  text.getText();
+            }
+
+
             //playTextDetectedMessage("");
             Log.d(TAG, "Line text is: " + line.getText());
             Log.d(TAG, "Line boundingbox is: " + line.getBoundingBox());
@@ -141,7 +203,7 @@ public class TextGraphic extends GraphicOverlay.Graphic {
                     showConfidence
                             ? String.format(Locale.US, "%s (%.2f)", text, line.getConfidence())
                             : text;
-            drawText(text, new RectF(line.getBoundingBox()), TEXT_SIZE + 2 * STROKE_WIDTH, canvas);
+            drawText(text, new RectF(line.getBoundingBox()), TEXT_SIZE + 20 * STROKE_WIDTH, canvas);
             if(CameraActivity.quickText)
             {
              // playTextDetectedMessage(text);

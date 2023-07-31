@@ -16,6 +16,7 @@
 
 package com.example.visual_aid_app.textdetector;
 
+import static com.example.visual_aid_app.CameraActivity.TEXT_RECOGNITION_DOCUMENT;
 import static com.example.visual_aid_app.CameraActivity.lightMonitorOn;
 
 import android.content.Context;
@@ -25,6 +26,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.example.visual_aid_app.CameraActivity;
 import com.example.visual_aid_app.activities.VisionProcessorBase;
 import com.example.visual_aid_app.camera_utils.GraphicOverlay;
 import com.example.visual_aid_app.preference.PreferenceUtils;
@@ -48,6 +50,7 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
   private final Boolean shouldGroupRecognizedTextInBlocks;
   private final Boolean showLanguageTag;
   private final boolean showConfidence;
+  private Context context;
   TextView textView;
 
   public TextRecognitionProcessor(
@@ -57,6 +60,7 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
     showLanguageTag = PreferenceUtils.showLanguageTag(context);
     showConfidence = PreferenceUtils.shouldShowTextConfidence(context);
     textRecognizer = TextRecognition.getClient(textRecognizerOptions);
+    this.context = context;
   }
   public TextRecognitionProcessor(
           Context context, TextRecognizerOptionsInterface textRecognizerOptions,boolean isDocument) {
@@ -65,6 +69,7 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
     showLanguageTag = PreferenceUtils.showLanguageTag(context);
     showConfidence = PreferenceUtils.shouldShowTextConfidence(context);
     textRecognizer = TextRecognition.getClient(textRecognizerOptions);
+    this.context = context;
   }
   public TextRecognitionProcessor(
           Context context,TextView textView) {
@@ -73,6 +78,7 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
     showLanguageTag = false;
     showConfidence = false;
     textRecognizer = null;
+    this.context = context;
   }
   @Override
   public void stop() {
@@ -91,15 +97,35 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
 
     if(!lightMonitorOn)
     {
-      Log.d(TAG, "On-device Text detection successful");
-      logExtrasForTesting(text);
-      graphicOverlay.add(
-              new TextGraphic(
-                      graphicOverlay,
-                      text,
-                      shouldGroupRecognizedTextInBlocks,
-                      showLanguageTag,
-                      showConfidence));
+      if(!CameraActivity.selectedModel.equals(TEXT_RECOGNITION_DOCUMENT))
+      {
+        Log.d(TAG, "On-device Text detection successful");
+        logExtrasForTesting(text);
+        graphicOverlay.add(
+                new TextGraphic(
+                        context,
+                        graphicOverlay,
+                        text,
+                        shouldGroupRecognizedTextInBlocks,
+                        showLanguageTag,
+                        showConfidence,
+                        false));
+      }
+      else
+      {
+        Log.d(TAG, "On-device Text detection successful");
+        logExtrasForTesting(text);
+        graphicOverlay.add(
+                new TextGraphic(
+                        context,
+                        graphicOverlay,
+                        text,
+                        shouldGroupRecognizedTextInBlocks,
+                        showLanguageTag,
+                        showConfidence,
+                        true));
+      }
+
     }
 
   }

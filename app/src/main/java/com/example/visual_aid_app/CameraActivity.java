@@ -105,7 +105,7 @@ public class CameraActivity extends AppCompatActivity {
             "Custom AutoML Object Detection (Flower)";
     private static final String FACE_DETECTION = "Face Detection";
     private static final String TEXT_RECOGNITION_LATIN = "Text Recognition Latin";
-    private static final String TEXT_RECOGNITION_DOCUMENT = "Text Recognition Document";
+    public static final String TEXT_RECOGNITION_DOCUMENT = "Text Recognition Document";
     private static final String ZOOM = "Zoom";
     private static final String COLOR_RECOGNITION = "Color Recognition";
     private static final String LIGHT_MONITOR = "Light Monitor";
@@ -121,7 +121,7 @@ public class CameraActivity extends AppCompatActivity {
     @Nullable private VisionImageProcessor imageProcessor;
     private boolean needUpdateGraphicOverlayImageSourceInfo;
 
-    private String selectedModel = TEXT_RECOGNITION_LATIN;
+    public static String selectedModel = TEXT_RECOGNITION_LATIN;
     private int lensFacing = CameraSelector.LENS_FACING_BACK;
     private CameraSelector cameraSelector;
     private ImageCapture imageCapture;
@@ -454,6 +454,7 @@ public class CameraActivity extends AppCompatActivity {
                                         textview.setTextColor(getResources().getColor(R.color.blue));
                                         textview.setMovementMethod(new ScrollingMovementMethod());
                                         textview.setBackgroundColor(getResources().getColor(R.color.white));
+                                        textview.scrollTo(0,0);
                                     }
                                     else
                                     {
@@ -1019,6 +1020,8 @@ public class CameraActivity extends AppCompatActivity {
 
                     break;
                 case TEXT_RECOGNITION_LATIN:
+                    graphicOverlay.clear();
+
                     bindPreviewUseCase();
 
                     Log.i(TAG, "Using on-device Text recognition Processor for Latin.");
@@ -1027,6 +1030,8 @@ public class CameraActivity extends AppCompatActivity {
                                     new TextRecognizerOptions.Builder().build());
                     break;
                 case TEXT_RECOGNITION_DOCUMENT:
+                    graphicOverlay.clear();
+
                     bindPreviewUseCase();
 
                     Log.i(TAG, "Using on-device Text recognition Processor for Latin in Documents.");
