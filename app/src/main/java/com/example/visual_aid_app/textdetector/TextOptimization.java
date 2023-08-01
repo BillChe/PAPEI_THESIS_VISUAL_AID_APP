@@ -1,6 +1,9 @@
 package com.example.visual_aid_app.textdetector;
 
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,7 +11,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 public class TextOptimization {
 
@@ -28,9 +33,47 @@ public class TextOptimization {
     public static List<String> extractWords(String text) {
         return Arrays.asList(text.split("\\s+"));
     }
+    private static int calculateLevenshteinDistance(String word1, String word2) {
+        int m = word1.length();
+        int n = word2.length();
+        int[][] dp = new int[m + 1][n + 1];
 
+        for (int i = 0; i <= m; i++) {
+            for (int j = 0; j <= n; j++) {
+                if (i == 0) {
+                    dp[i][j] = j;
+                } else if (j == 0) {
+                    dp[i][j] = i;
+                } else {
+                    int cost = (word1.charAt(i - 1) == word2.charAt(j - 1)) ? 0 : 1;
+                    dp[i][j] = Math.min(dp[i - 1][j] + 1, Math.min(dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost));
+                }
+            }
+        }
+
+        return dp[m][n];
+    }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static List<String> getWordSuggestions(String word, Context context) {
+        List<String> suggestions = new ArrayList<>();
+        int maxDistance = 2; // Maximum Levenshtein distance for suggestions
+        //DICTIONARY  = loadEnglishWords(context);
+        for (String dictWord : DICTIONARY) {
+            int distance = calculateLevenshteinDistance(word, dictWord);
+            if (distance <= maxDistance) {
+                suggestions.add(dictWord);
+            }
+        }
+
+        // Sort suggestions based on the Levenshtein distance
+        suggestions.sort(Comparator.comparingInt(s -> calculateLevenshteinDistance(word, s)));
+
+        return suggestions;
+    }
     // Method to optimize the recognized words using the dictionary
-    public static List<String> optimizeText(List<String> words,Context context) {
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static List<String> optimizeText(List<String> words, Context context) {
+
         List<String> optimizedWords = new ArrayList<>();
         DICTIONARY  = loadEnglishWords(context);
         for (String word : words) {
@@ -40,7 +83,21 @@ public class TextOptimization {
             } else {
                 // Handle potentially erroneous words here (e.g., use spell-check suggestions)
                 // For simplicity, we'll just keep the original unrecognized word
-                optimizedWords.add(word);
+               optimizedWords.add(cleanedWord);
+
+              /*      System.out.println(cleanedWord);
+                    List<String> suggestions = getWordSuggestions(cleanedWord,context);
+                    if (!suggestions.isEmpty()) {
+                        System.out.println("Suggestions:");
+                        System.out.println("Suggestion for word:"+cleanedWord);
+                 *//*       for (String suggestion : suggestions) {*//*
+                            System.out.println("Suggestion"+
+                                    suggestions.get(0));
+                            optimizedWords.remove(cleanedWord);
+                            optimizedWords.add(suggestions.get(0));
+                        //}
+                    }*/
+
             }
         }
 

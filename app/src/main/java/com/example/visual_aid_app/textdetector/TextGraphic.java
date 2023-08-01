@@ -203,7 +203,7 @@ public class TextGraphic extends GraphicOverlay.Graphic {
                     showConfidence
                             ? String.format(Locale.US, "%s (%.2f)", text, line.getConfidence())
                             : text;
-            drawText(text, new RectF(line.getBoundingBox()), TEXT_SIZE + 20 * STROKE_WIDTH, canvas);
+            drawText(text, new RectF(line.getBoundingBox()), TEXT_SIZE + 2 * STROKE_WIDTH, canvas);
             if(CameraActivity.quickText)
             {
              // playTextDetectedMessage(text);

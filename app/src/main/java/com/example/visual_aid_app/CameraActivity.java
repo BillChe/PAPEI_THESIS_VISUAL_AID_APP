@@ -415,7 +415,7 @@ public class CameraActivity extends AppCompatActivity {
                     new ImageCapture.OnImageSavedCallback() {
                         @Override
                         public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                            String msg = "Photo captured successfully: " + photoFile.getAbsolutePath();
+                            String msg = "Photo captured successfully " /*+ photoFile.getAbsolutePath()*/;
                             savedImageBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
 
                             if (savedImageBitmap != null) {
