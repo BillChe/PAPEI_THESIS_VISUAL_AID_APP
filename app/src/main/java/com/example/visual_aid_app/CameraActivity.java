@@ -850,10 +850,16 @@ public class CameraActivity extends AppCompatActivity {
                 .setPositiveButton("Latest image", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent();
+                 /*       Intent intent = new Intent();
                         intent.setAction(Intent.ACTION_VIEW);
                         intent.setDataAndType(Uri.parse(imageFilePath),
                                 "image/*");
+                        startActivity(intent);*/
+                        Intent intent = new Intent();
+                        intent.setAction(Intent.ACTION_VIEW);
+            /*        intent.setDataAndType(Uri.parse(imageFilePath),
+                            "image/*");*/
+                        intent.setDataAndType(Uri.fromFile(new File(imageFilePath)), "image/*");
                         startActivity(intent);
                         dialog.dismiss(); // Close the dialog
                     }
