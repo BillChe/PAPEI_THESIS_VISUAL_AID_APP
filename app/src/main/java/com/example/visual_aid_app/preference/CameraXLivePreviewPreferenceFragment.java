@@ -54,6 +54,9 @@ public class CameraXLivePreviewPreferenceFragment extends LivePreviewPreferenceF
         R.string.pref_key_camerax_rear_camera_target_resolution, CameraSelector.LENS_FACING_BACK);
     setUpCameraXTargetAnalysisSizePreference(
         R.string.pref_key_camerax_front_camera_target_resolution, CameraSelector.LENS_FACING_FRONT);
+    //todo vasilis remove unused settings from Settings Activity
+    cameraPreference.removePreference(
+            findPreference(getString(R.string.pref_key_live_preview_face_detection_landmark_mode)));
   }
 
   private void setUpCameraXTargetAnalysisSizePreference(

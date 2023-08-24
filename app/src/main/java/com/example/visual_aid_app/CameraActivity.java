@@ -139,6 +139,7 @@ public class CameraActivity extends AppCompatActivity {
 
     private FloatingActionButton faceRecognition;
     private boolean addPending = false;
+    int statusTTs = -1;
 
 
     @Override
@@ -168,6 +169,7 @@ public class CameraActivity extends AppCompatActivity {
             public void onInit(int status) {
                 if (status != TextToSpeech.ERROR) {
                     textToSpeech.setLanguage(Locale.US);
+                    statusTTs = status;
                 }
             }
         });
@@ -455,6 +457,17 @@ public class CameraActivity extends AppCompatActivity {
                                         textview.setMovementMethod(new ScrollingMovementMethod());
                                         textview.setBackgroundColor(getResources().getColor(R.color.white));
                                         textview.scrollTo(0,0);
+                                        //TTS on text found
+                                        if(!quickText)
+                                        {
+                                            new Thread(new Runnable() {
+                                                public void run() {
+                                                    playTextDetectedMessage(textFound);
+                                                }
+                                            }).start();
+
+
+                                        }
                                     }
                                     else
                                     {
@@ -489,8 +502,33 @@ public class CameraActivity extends AppCompatActivity {
         }
 
     }
+    private void playTextDetectedMessage(String text) {
 
+                if (statusTTs == TextToSpeech.SUCCESS) {
+                    if(textToSpeech.isSpeaking())
+                    {
+                        textToSpeech.stop();
+                    }
+                    if(textFound!=null && textFound.length()>0)
+                    {
+                        textToSpeech.setLanguage(Locale.US);
+                        textToSpeech.speak(textFound,
+                                TextToSpeech.QUEUE_ADD, null);
+                    }
+                    else
+                    {
+                        textToSpeech.setLanguage(Locale.US);
+                        textToSpeech.speak(text,
+                                TextToSpeech.QUEUE_ADD, null);
+                    }
+
+                }
+
+
+
+    }
     private void restoreTextView() {
+        textFound = "";
         hideTextBtn.setVisibility(View.GONE);
         textview.setText(getString(R.string.resultTextDefault));
         textview.setTextColor(getResources().getColor(R.color.white));
@@ -1180,6 +1218,11 @@ public class CameraActivity extends AppCompatActivity {
 
     @Override
     public void onDestroy() {
+        if (textToSpeech != null) {
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+
+        }
         super.onDestroy();
         if (imageProcessor != null) {
             imageProcessor.stop();
