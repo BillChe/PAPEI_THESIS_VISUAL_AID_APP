@@ -573,7 +573,7 @@ public class CameraActivity extends AppCompatActivity {
                         return;
 
                     showChooseImageDialog();
-             /*       Intent intent = new Intent();
+           /*         Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     intent.setDataAndType(Uri.parse(imageFilePath),
                             "image/*");
@@ -881,23 +881,17 @@ public class CameraActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void showChooseImageDialog() {
+    public void showChooseImageDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Show Image")
                 .setMessage("Choose to view latest image or all saved images")
                 .setPositiveButton("Latest image", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                 /*       Intent intent = new Intent();
+                        Intent intent = new Intent();
                         intent.setAction(Intent.ACTION_VIEW);
                         intent.setDataAndType(Uri.parse(imageFilePath),
                                 "image/*");
-                        startActivity(intent);*/
-                        Intent intent = new Intent();
-                        intent.setAction(Intent.ACTION_VIEW);
-            /*        intent.setDataAndType(Uri.parse(imageFilePath),
-                            "image/*");*/
-                        intent.setDataAndType(Uri.fromFile(new File(imageFilePath)), "image/*");
                         startActivity(intent);
                         dialog.dismiss(); // Close the dialog
                     }
