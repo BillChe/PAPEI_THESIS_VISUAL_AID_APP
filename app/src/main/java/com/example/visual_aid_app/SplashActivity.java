@@ -1,7 +1,7 @@
 package com.example.visual_aid_app;
 
 import static com.example.visual_aid_app.utils.Util.checkHasCameraPermission;
-import static com.example.visual_aid_app.utils.Util.checkHasWritgeExternalStoragePermission;
+import static com.example.visual_aid_app.utils.Util.checkHasWriteExternalStoragePermission;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -35,7 +35,7 @@ public class SplashActivity extends AppCompatActivity {
                 getBaseContext().getResources().getDisplayMetrics());
 
         if(checkHasCameraPermission(SplashActivity.this) &&
-                checkHasWritgeExternalStoragePermission(SplashActivity.this))
+                checkHasWriteExternalStoragePermission(SplashActivity.this))
         {
             playWelcomeMessage();
             new Handler().postDelayed(new Runnable() {
@@ -73,7 +73,7 @@ public class SplashActivity extends AppCompatActivity {
         if(grantResults.length>0)
         {
             if (checkHasCameraPermission(SplashActivity.this)
-                    && checkHasWritgeExternalStoragePermission(SplashActivity.this)) {
+                    && checkHasWriteExternalStoragePermission(SplashActivity.this)) {
                 Toast.makeText(this,"Permission Granted",Toast.LENGTH_SHORT).show();
                 playWelcomeMessage();
                 new Handler().postDelayed(new Runnable() {

@@ -3,7 +3,7 @@ package com.example.visual_aid_app;
 import static com.example.visual_aid_app.camera_utils.BitmapUtils.rotateImage;
 import static com.example.visual_aid_app.textdetector.TextGraphic.textFound;
 import static com.example.visual_aid_app.utils.Util.checkHasCameraPermission;
-import static com.example.visual_aid_app.utils.Util.checkHasWritgeExternalStoragePermission;
+import static com.example.visual_aid_app.utils.Util.checkHasWriteExternalStoragePermission;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -200,7 +200,7 @@ public class CameraActivity extends AppCompatActivity {
         textDetectBtn.setSelected(true);
         //camera init Create an instance of Camera
         if (checkHasCameraPermission(CameraActivity.this)
-                && checkHasWritgeExternalStoragePermission(CameraActivity.this)) {
+                && checkHasWriteExternalStoragePermission(CameraActivity.this)) {
         }
         else {
             requestCameraPermission();
@@ -528,6 +528,8 @@ public class CameraActivity extends AppCompatActivity {
 
     }
     private void restoreTextView() {
+        if(textToSpeech!=null && textToSpeech.isSpeaking())
+        textToSpeech.stop();
         textFound = "";
         hideTextBtn.setVisibility(View.GONE);
         textview.setText(getString(R.string.resultTextDefault));
@@ -1229,7 +1231,7 @@ public class CameraActivity extends AppCompatActivity {
         if(grantResults.length>0)
         {
             if(checkHasCameraPermission(CameraActivity.this)
-                    && checkHasWritgeExternalStoragePermission(CameraActivity.this))
+                    && checkHasWriteExternalStoragePermission(CameraActivity.this))
             {
                 Toast.makeText(this,"Permissions Granted",Toast.LENGTH_LONG).show();
             }

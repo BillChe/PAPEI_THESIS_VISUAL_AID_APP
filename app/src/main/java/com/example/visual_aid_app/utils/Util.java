@@ -18,7 +18,7 @@ public class Util {
         return ActivityCompat.checkSelfPermission(context,
                 android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
     }
-    public static boolean checkHasWritgeExternalStoragePermission(Context context) {
+    public static boolean checkHasWriteExternalStoragePermission(Context context) {
         return ActivityCompat.checkSelfPermission(context,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
